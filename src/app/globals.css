@@ -3,13 +3,6 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 html {
   height: 100%;
 }
@@ -47,3 +40,7 @@ a {
     color-scheme: dark;
   }
 }
+
+/* Dark mode media queries intentionally removed to keep default light theme.
+   If you want responsive dark mode later, we can implement a theme toggle
+   and CSS vars controlled by a `data-theme` attribute. */
