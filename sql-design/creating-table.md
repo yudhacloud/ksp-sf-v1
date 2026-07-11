@@ -1,4 +1,21 @@
 -- KSP Schema for Supabase
+-- Drop existing schema objects so the schema can be recreated cleanly.
+DROP TABLE IF EXISTS public.installment_payments CASCADE;
+DROP TABLE IF EXISTS public.loan_installments CASCADE;
+DROP TABLE IF EXISTS public.loans CASCADE;
+DROP TABLE IF EXISTS public.loan_applications CASCADE;
+DROP TABLE IF EXISTS public.loan_products CASCADE;
+DROP TABLE IF EXISTS public.saving_transactions CASCADE;
+DROP TABLE IF EXISTS public.saving_products CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.audit_logs CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
+DROP TYPE IF EXISTS installment_status CASCADE;
+DROP TYPE IF EXISTS loan_status CASCADE;
+DROP TYPE IF EXISTS approval_status CASCADE;
+DROP TYPE IF EXISTS saving_type CASCADE;
+
 create type saving_type as enum ('POKOK','WAJIB','SUKARELA');
 create type approval_status as enum ('PENDING','APPROVED','REJECTED');
 create type loan_status as enum ('ACTIVE','PAID','DEFAULT','CANCELLED');
@@ -10,6 +27,7 @@ create table public.profiles (
   full_name varchar(150) not null,
   email varchar(255) unique,
   phone varchar(30),
+  role varchar(20) not null default 'pengguna',
   address text,
   status boolean not null default true,
   created_at timestamptz not null default now(),

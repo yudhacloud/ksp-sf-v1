@@ -1,3 +1,8 @@
 export default function Page() {
-  return <div>Coming soon</div>;
+  return (
+    <div className="container py-5">
+      <h1>Admin Dashboard</h1>
+      <p>Halaman sementara untuk admin.</p>
+    </div>
+  );
 }

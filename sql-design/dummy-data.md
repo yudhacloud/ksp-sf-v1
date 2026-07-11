@@ -2,6 +2,19 @@
 -- DUMMY DATA PROFILES
 -- ==========================================
 
+-- Clear existing dummy data before reinserting. Run this after the schema exists.
+TRUNCATE TABLE public.installment_payments,
+    public.loan_installments,
+    public.loans,
+    public.loan_applications,
+    public.loan_products,
+    public.saving_transactions,
+    public.saving_products,
+    public.notifications,
+    public.audit_logs,
+    public.profiles
+    RESTART IDENTITY CASCADE;
+
 INSERT INTO public.profiles (
     id,
     member_number,
@@ -57,6 +70,29 @@ SELECT
     'Sidoarjo'
 FROM auth.users
 WHERE email = 'citra@example.com'
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.profiles (
+    id,
+    member_number,
+    full_name,
+    email,
+    phone,
+    role,
+    address,
+    status
+)
+SELECT
+    id,
+    'ADM0001',
+    'Admin Sistem',
+    email,
+    '081200001234',
+    'admin',
+    'Kantor Pusat',
+    true
+FROM auth.users
+WHERE email = 'admin@kspsf.com'
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================

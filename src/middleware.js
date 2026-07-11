@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
+import { authMiddleware } from "@/src/lib/auth/middleware";
 
-export function middleware() {
-  return NextResponse.next();
+export function middleware(request) {
+  return authMiddleware(request);
 }
