@@ -9,24 +9,37 @@ export function authMiddleware(request) {
   const role = roleCookie?.value;
   const userId = userIdCookie?.value;
 
-  // Halaman admin hanya untuk role admin.
-  if (pathname.startsWith("/admin")) {
-    if (role !== AUTH_ROLES.ADMIN) {
-      if (userId) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-      return NextResponse.redirect(new URL("/login", request.url));
+  const isAdminPath = pathname.startsWith("/admin");
+  const isDashboardPath = pathname.startsWith("/dashboard");
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  const isLoggedIn = Boolean(userId);
+  const isAdmin = role === AUTH_ROLES.ADMIN;
+
+  // Halaman admin hanya untuk admin.
+  if (isAdminPath) {
+    if (!isAdmin) {
+      const redirectTo = isLoggedIn ? "/dashboard" : "/login";
+      return NextResponse.redirect(new URL(redirectTo, request.url));
     }
+    return NextResponse.next();
   }
 
-  // Halaman dashboard hanya untuk pengguna biasa.
-  if (pathname.startsWith("/dashboard")) {
-    if (!userId) {
+  // Halaman dashboard hanya untuk pengguna yang sudah login.
+  if (isDashboardPath) {
+    if (!isLoggedIn) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    if (role === AUTH_ROLES.ADMIN) {
+    if (isAdmin) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
+    return NextResponse.next();
+  }
+
+  // Halaman login/register hanya untuk yang belum login.
+  if (isAuthPage && isLoggedIn) {
+    const redirectTo = isAdmin ? "/admin/dashboard" : "/dashboard";
+    return NextResponse.redirect(new URL(redirectTo, request.url));
   }
 
   return NextResponse.next();
