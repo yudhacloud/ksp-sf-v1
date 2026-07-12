@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import styles from "../AuthPage.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,70 +32,64 @@ export default function LoginPage() {
       return;
     }
 
-    setMessage(`Login berhasil. Selamat datang, ${result.user.email}.`);
-    setEmail("");
-    setPassword("");
-
     const nextPath = result.profile?.role === "admin" ? "/admin/dashboard" : "/dashboard";
     router.push(nextPath);
   }
 
   return (
-    <div className="container py-3">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h1 className="h4 mb-3">Login</h1>
-              <p className="text-muted">
-                Masuk dengan email dan password yang Anda daftarkan.
-              </p>
+    <div className={styles.authPage}>
+      <div className={styles.authCard}>
+        <div className={styles.authHeader}>
+          <h1 className={styles.authTitle}>Welcome Back!</h1>
+          <p className={styles.authSubtitle}>
+            Masuk untuk mengelola akun dan melihat ringkasan keuangan koperasi.
+          </p>
+        </div>
 
-              <form onSubmit={handleLogin}>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label htmlFor="password" className="form-label">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    className="form-control"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    required
-                  />
-                </div>
-
-                {message && (
-                  <div className="alert alert-info" role="alert">
-                    {message}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={loading}
-                >
-                  {loading ? "Memproses..." : "Masuk"}
-                </button>
-              </form>
-            </div>
+        <form onSubmit={handleLogin}>
+          <div className={styles.formGroup}>
+            <label htmlFor="email" className={styles.formLabel}>
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              className={styles.formControl}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
           </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password" className={styles.formLabel}>
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              className={styles.formControl}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
+
+          {message && <div className={styles.alertMessage}>{message}</div>}
+
+          <button
+            type="submit"
+            className={styles.primaryButton}
+            disabled={loading}
+          >
+            {loading ? "Memproses..." : "Masuk"}
+          </button>
+        </form>
+
+        <div className={styles.divider}>atau masuk dengan</div>
+
+        <div className={styles.linkRow}>
+          Belum punya akun? <a href="/register">Daftar sekarang</a>
         </div>
       </div>
     </div>
