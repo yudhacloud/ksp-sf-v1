@@ -26,7 +26,11 @@ export default async function Page() {
       <PageHeader
         title="Anggota"
         subtitle="Kelola data anggota koperasi dan lihat ringkasan statistik paling penting."
-        actions={<button className="btn btn-primary">Tambah Anggota</button>}
+        actions={
+          <a href="/admin/members/create" className="btn btn-primary">
+            Tambah Anggota
+          </a>
+        }
       />
 
       <div className="admin-grid mb-4">
