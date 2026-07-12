@@ -25,6 +25,7 @@
   --shadow: 0 10px 30px rgba(31, 41, 55, 0.08);
   --max-page-width: 1200px;
   --page-gutter: 1.5rem;
+  --header-height: 72px;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;

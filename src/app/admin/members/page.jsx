@@ -2,7 +2,7 @@ import PageHeader from "@/src/components/ui/PageHeader";
 
 export default function Page() {
   return (
-    <section className="container py-5 admin-page">
+    <section className="container py-3 admin-page">
       <PageHeader
         title="Anggota"
         subtitle="Kelola data anggota koperasi dan lihat ringkasan statistik paling penting."

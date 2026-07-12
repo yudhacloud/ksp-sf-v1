@@ -2,7 +2,7 @@ import PageHeader from "@/src/components/ui/PageHeader";
 
 export default function Page() {
   return (
-    <section className="container py-5 admin-page">
+    <section className="container py-3 admin-page">
       <PageHeader
         title="Pengajuan Pinjaman"
         subtitle="Kelola pengajuan pinjaman, filter status, dan lihat detail tindak lanjut."

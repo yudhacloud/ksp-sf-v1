@@ -4,6 +4,7 @@ export const metadata = {
 };
 
 import Sidebar from "@/src/components/layout/Sidebar";
+import Header from "@/src/components/layout/Header";
 import { cookies, headers } from "next/headers";
 import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
 
@@ -42,7 +43,10 @@ export default function AdminLayout({ children }) {
   return (
     <section className="d-flex">
       <Sidebar role={role} />
-      <main className="flex-grow-1 p-3">{children}</main>
+      <main className="flex-grow-1">
+        <Header />
+        <div className="p-3">{children}</div>
+      </main>
     </section>
   );
 }

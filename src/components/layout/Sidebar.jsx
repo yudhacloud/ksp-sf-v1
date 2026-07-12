@@ -66,7 +66,7 @@ export default function Sidebar({ role = "pengguna" }) {
    return (
       <aside className={styles.sidebar} aria-label="Sidebar">
          <div className={styles.sidebarHeader}>
-            <h2>Aplikasi KSP</h2>
+            <img src="/assets/Logo.png" alt="Aplikasi KSP" className={styles.logo} />
          </div>
 
          <nav className={styles.sidebarNav}>
@@ -88,11 +88,7 @@ export default function Sidebar({ role = "pengguna" }) {
             )}
          </nav>
 
-         <div className={styles.sidebarFooter}>
-            <button type="button" className={styles.logoutButton} onClick={handleLogout}>
-               Logout
-            </button>
-         </div>
+         {/* logout moved to top header */}
       </aside>
    );
 }
