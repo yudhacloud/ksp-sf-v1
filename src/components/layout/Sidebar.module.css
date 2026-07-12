@@ -1,45 +1,115 @@
 .sidebar {
-   width: 220px;
+   width: 240px;
    min-height: 100vh;
    position: sticky;
    top: 0;
-   background-color: var(--background);
-   border-right: 1px solid rgba(0, 0, 0, 0.06);
+   background-color: var(--color-surface);
+   border-right: 1px solid var(--color-border);
+   display: flex;
+   flex-direction: column;
 }
 
 .sidebarHeader {
-   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+   border-bottom: 1px solid var(--color-border);
+   padding: 1rem 1.5rem;
+}
+
+.sidebarHeader h2 {
+   margin: 0;
+   color: var(--color-primary);
+   font-weight: 700;
+   font-size: 1.125rem;
 }
 
 .sidebarNav {
-   padding-top: 0.75rem;
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+}
+
+.sidebarSection {
+   padding: 0.25rem 0 0;
+}
+
+.sidebarDivider {
+   border: none;
+   height: 1px;
+   background: var(--color-border);
+   margin: 0;
+}
+
+.sidebarSection ul {
+   margin: 0;
+   padding: 0;
+}
+
+.sidebarFooter {
+   padding: 1.5rem;
+   border-top: 1px solid var(--color-border);
+}
+
+.logoutButton {
+   width: 100%;
+   display: inline-flex;
+   justify-content: center;
+   align-items: center;
+   gap: 0.5rem;
+   padding: 0.85rem 1rem;
+   border: none;
+   border-radius: 0.9rem;
+   background: var(--color-danger);
+   color: #fff;
+   font-weight: 700;
+   transition: background-color 0.2s ease;
+   cursor: pointer;
+}
+
+.logoutButton:hover {
+   background: #d32f2f;
 }
 
 .sidebarItem {
-   padding: 0.25rem 0;
+   position: relative;
+   margin: 0.35rem 0;
+   padding: 0;
 }
 
 .sidebarLink {
-   color: var(--foreground);
-   opacity: 0.85;
+   color: var(--color-text-primary);
+   opacity: 0.9;
    text-decoration: none;
    display: block;
-   padding: 0.5rem 0.75rem;
-   border-radius: 0.25rem;
+   padding: 0.7rem 1.1rem;
+   border-radius: 0;
+   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebarLink:hover {
-   background-color: rgba(0, 0, 0, 0.04);
+   background-color: var(--color-primary-light);
    text-decoration: none;
    opacity: 1;
+   transform: none;
+   border-radius: 0;
 }
 
-.active {
-   background-color: rgba(0, 0, 0, 0.06);
+.activeItem {
+   position: relative;
+   background-color: rgba(6, 71, 52, 0.1);
    font-weight: 600;
    opacity: 1;
 }
 
-.sidebarSection h6 {
-   margin-bottom: 0.25rem;
+.activeItem::before {
+   content: "";
+   position: absolute;
+   left: 0;
+   top: 0;
+   bottom: 0;
+   width: 4px;
+   background: var(--color-primary);
+}
+
+.activeLink {
+   color: var(--color-primary);
+   font-weight: 700;
 }

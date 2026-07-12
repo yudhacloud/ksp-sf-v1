@@ -2,21 +2,17 @@
 
 ## Design Philosophy
 
-Website menggunakan gaya modern, profesional, bersih, dan mudah digunakan oleh seluruh kalangan.
+Website menggunakan gaya modern, profesional, dan ringan.
 
-Prioritaskan keterbacaan daripada dekorasi.
+Prioritaskan keterbacaan, navigasi jelas, dan ruang putih yang nyaman.
 
-Hindari tampilan yang terlalu ramai.
-
-Gunakan banyak ruang kosong (white space).
-
-Semua halaman harus memiliki hirarki visual yang jelas.
+Setiap elemen harus memiliki tujuan dan mempermudah pengguna.
 
 ---
 
 # Design Principles
 
-Selalu gunakan prinsip berikut:
+Gunakan prinsip berikut:
 
 - Clean
 - Consistent
@@ -25,92 +21,72 @@ Selalu gunakan prinsip berikut:
 - Functional
 - Accessible
 
-Semua elemen harus memiliki tujuan.
-
-Jangan menambahkan dekorasi yang tidak memiliki fungsi.
+Fokus pada konten, bukan dekorasi yang berlebihan.
 
 ---
 
-# Visual Hierarchy
+# Color
 
-Urutan perhatian pengguna harus selalu:
+| Role           | Color            | Hex       |
+| -------------- | ---------------- | --------- |
+| Primary        | Forest           | `#064734` |
+| Primary Hover  | Forest Dark      | `#043829` |
+| Primary Light  | Mint             | `#E0FFC2` |
+| Secondary      | Sage             | `#A7D7A0` |
+| Accent         | Emerald          | `#27AE60` |
+| Background     | Soft Green       | `#F7FCF8` |
+| Surface        | White            | `#FFFFFF` |
+| Border         | Light Green Gray | `#DCE8E2` |
+| Text Primary   | Charcoal         | `#1F2937` |
+| Text Secondary | Gray             | `#6B7280` |
 
-1. Page Title
-2. Summary Information
-3. Primary Action
-4. Filter / Search
-5. Main Content
-6. Secondary Information
+| Status   | Color     |
+| -------- | --------- |
+| Success  | `#22C55E` |
+| Pending  | `#F59E0B` |
+| Danger   | `#EF4444` |
+| Info     | `#3B82F6` |
+| Disabled | `#9CA3AF` |
+
+---
+
+## Typography
+
+Gunakan font **DM Sans** untuk semua teks.
+
+Skala tipografi:
+
+- Judul halaman: 2rem
+- Subjudul: 1.25rem
+- Isi teks: 1rem
+- Caption / helper: 0.875rem
+
+Pakai font-weight yang jelas untuk judul, metadata, dan tombol utama.
 
 ---
 
 # Layout
 
-Setiap halaman dashboard memiliki struktur yang sama.
+Struktur dashboard:
 
-Header
+- Sidebar kiri
+- Header / Page title
+- Ringkasan statistik di atas
+- Grid konten utama
+- Area sekunder di bawah
 
-↓
-
-Breadcrumb
-
-↓
-
-Judul Halaman
-
-↓
-
-Ringkasan (jika diperlukan)
-
-↓
-
-Action Button
-
-↓
-
-Filter & Search
-
-↓
-
-Content
-
-↓
-
-Pagination
-
-Jangan mengubah urutan ini.
-
----
-
-# Page Width
-
-Gunakan lebar yang konsisten.
-
-Konten tidak boleh menempel ke tepi layar.
-
-Gunakan spacing yang cukup.
+Gunakan `container` dengan lebar maksimal dan padding horizontal konsisten.
 
 ---
 
 # Spacing
 
-Gunakan jarak yang konsisten.
+Gunakan jarak konsisten:
 
-Antar Section
-
-Besar
-
-Antar Card
-
-Sedang
-
-Antar Input
-
-Sedang
-
-Antar Text
-
-Kecil
+- antar section: besar
+- antar card: sedang
+- antar input: sedang
+- antar teks: kecil
 
 Jangan membuat elemen terlalu rapat.
 
@@ -118,103 +94,81 @@ Jangan membuat elemen terlalu rapat.
 
 # Alignment
 
-Gunakan alignment yang konsisten.
-
-Title
-
-Kiri
-
-Button
-
-Kanan
-
-Statistik
-
-Grid
-
-Table
-
-Full Width
+- Judul kiri
+- Tombol action kanan
+- Teks ringkasan kiri
+- Konten grid rapi
 
 ---
 
 # Card Design
 
-Semua card memiliki gaya yang sama.
+Card harus bersih, sederhana, dan putih.
 
-Border radius konsisten.
-
-Shadow tipis.
-
-Padding besar.
-
-Judul di bagian atas.
-
-Konten mudah dibaca.
-
-Hindari card dengan terlalu banyak informasi.
+- border-radius 1rem
+- border halus
+- shadow ringan
+- padding besar
+- informasi dipisah rapi
 
 ---
 
-# Statistics Card
+# Dashboard Cards
 
-Setiap statistik hanya menampilkan:
+Kartu statistik menampilkan:
 
-Nama Statistik
+- Judul
+- Nilai utama
+- Deskripsi singkat
+- Badge status atau icon kecil
 
-Nilai
-
-Icon
-
-Opsional:
-
-Persentase
-
-Trend
-
-Jangan menambahkan informasi lain.
+Gunakan aksen hijau untuk nilai positif dan tombol utama.
 
 ---
 
-# Table Design
+# Sidebar
 
-Table adalah komponen utama.
+Sidebar menggunakan permukaan putih dan border hijau lembut.
 
-Gunakan tampilan sederhana.
+Item aktif diberi aksen hijau di kiri dan background lembut.
 
-Header jelas.
+---
 
-Kolom rata.
+# Buttons
 
-Action berada di kolom terakhir.
+Tombol utama menggunakan `#064734`.
 
-Status menggunakan Badge.
+Hover tombol utama menggunakan `#043829`.
 
-Nominal rata kanan.
-
-Tanggal konsisten.
+Tombol sekunder menggunakan border netral dan teks hijau.
 
 ---
 
 # Form Design
 
-Semua form memiliki struktur yang sama.
+Form tersusun vertikal:
 
 Judul
-
 ↓
-
-Deskripsi (opsional)
-
+Deskripsi
 ↓
-
 Input
-
 ↓
+Button action
 
-Button Action
+Input menggunakan border lembut, background putih, dan teks utama gelap.
 
-Input disusun vertikal.
+---
+
+# Visual Hierarchy
+
+Urutan perhatian:
+
+1. Page title
+2. Ringkasan informasi
+3. Primary action
+4. Konten utama
+5. Informasi sekunder
 
 Label selalu berada di atas input.
 

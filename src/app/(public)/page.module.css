@@ -1,21 +1,12 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  font-family: var(--font-dm-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
 }
 
 .main {
@@ -26,7 +17,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  background-color: var(--foreground);
+  background-color: var(--color-surface);
   padding: 120px 60px;
 }
 
@@ -53,12 +44,12 @@
   font-size: 18px;
   line-height: 32px;
   text-wrap: balance;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .intro a {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-primary);
 }
 
 .ctas {
@@ -78,20 +69,21 @@
   padding: 0 16px;
   border-radius: 128px;
   border: 1px solid transparent;
-  transition: 0.2s;
+  transition: background 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
   width: fit-content;
   font-weight: 500;
 }
 
 a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+  background: var(--color-primary);
+  color: var(--color-surface);
   gap: 8px;
 }
 
 a.secondary {
   border-color: var(--button-secondary-border);
+  color: var(--color-primary);
 }
 
 /* Enable hover only on non-touch devices */
