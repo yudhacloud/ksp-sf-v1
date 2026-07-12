@@ -14,14 +14,10 @@ Buat Copilot menulis kode yang konsisten dengan struktur dan gaya proyek Next.js
 - Tempatkan semua kode aplikasi di dalam `src/`.
 - `src/app/` untuk route dan layout Next.js App Router.
 - `src/components/` untuk komponen UI yang dapat digunakan ulang.
-- `src/features/` untuk logika domain atau fitur aplikasi.
 - `src/lib/` untuk utilitas, constants, helper, dan integrasi eksternal.
-- `src/hooks/` untuk custom React hooks.
-- `src/services/` untuk layanan API atau permintaan jaringan.
-- `src/repositories/` untuk abstraksi akses data.
-- `src/stores/` untuk state management global atau store.
-- `src/styles/` untuk gaya global dan tema.
-- `src/assets/` untuk gambar, ikon, dan logo.
+- `src/services/` untuk layanan API atau permintaan jaringan/data.
+- `src/middleware.js` untuk middleware Next.js di level aplikasi.
+- Jika folder lain yang umum seperti `src/hooks/`, `src/stores/`, `src/styles/`, atau `src/assets/` diperlukan, buat hanya bila fitur membutuhkan struktur tersebut.
 
 ## Penamaan file
 - Gunakan `.jsx` untuk komponen React di `src/app` atau `src/components`.
@@ -54,20 +50,34 @@ Buat Copilot menulis kode yang konsisten dengan struktur dan gaya proyek Next.js
 - Gunakan ekspor bernama untuk utilitas dan fungsi bantu.
 
 ## Penanganan data dan fungsi
-- Simpan logika data di `features`, `services`, atau `repositories`, bukan langsung di komponen halaman bila memungkinkan.
-- Komponen halaman harus tetap tipis: fokus pada penataan tampilan dan pemanggilan komponen.
-- Gunakan nama fungsi yang menjelaskan tindakan, misal `fetchData`, `handleSubmit`, `formatCurrency`.
+- Simpan logika data di `services`, bukan langsung di komponen halaman bila memungkinkan.
+- Untuk data anggota dan resource admin, gunakan service di `src/services/`.
+- Jika perlu endpoint khusus, letakkan API route di `src/app/api/...`.
+- Komponen halaman harus tetap tipis: fokus pada layout, statistik, dan pemanggilan komponen.
+- Gunakan server-side fetch (`page.jsx` async) untuk memuat data awal dari API route.
+- Untuk filter dan pencarian, gunakan client component yang menerima data awal dan memprosesnya di frontend.
+- Hindari membuat request tambahan setiap kali filter berubah; cukup fetch sekali di awal.
+- Gunakan nama fungsi yang menjelaskan tindakan, misal `fetchMembers`, `getMemberStats`, `handleSearch`.
+
+## Data flow rekomendasi
+- `src/services/` berisi fungsi data-level seperti `fetchMembers()`.
+- `src/app/api/admin/...` berisi route server-side yang memanggil service.
+- `src/app/admin/.../page.jsx` adalah server component yang fetch data awal via API route.
+- `src/components/admin/...` berisi client component interaktif untuk filter/search.
+- Client component menggunakan `useState` + `useMemo` untuk memproses data yang sudah dimuat.
 
 ## Komentar dan Dokumentasi
 - Berikan komentar singkat jika logika tidak langsung jelas.
 - Jangan gunakan komentar untuk menjelaskan kode yang sudah jelas dari konteks.
 - Prioritaskan kode yang dapat dibaca ketimbang komentar berlebihan.
+- Tambahkan catatan jika ada alasan khusus, misal "data sudah di-fetch sekali di server" atau "filter dijalankan di client agar tidak query ulang".
 
 ## Konsistensi Copilot
 - Jika ada beberapa opsi implementasi, pilih yang paling sederhana dan paling mudah dipelihara.
 - Saat membuat kode baru, ikuti aturan struktur folder dan penamaan yang sudah ada.
 - Jangan mengubah struktur folder tanpa menyelaraskan rute dan impor yang relevan.
 - Gunakan folder `sql-design/` sebagai acuan struktur database dan relasi yang sudah dirancang.
+- Untuk halaman admin, pastikan data yang ditampilkan sesuai peran: misalnya daftar anggota tidak menyertakan akun admin.
 
 ## Referensi Database
 - `sql-design/creating-table.md` berisi skema tabel dan relasi utama.
