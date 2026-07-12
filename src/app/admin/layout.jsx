@@ -8,10 +8,10 @@ import Header from "@/src/components/layout/Header";
 import { cookies, headers } from "next/headers";
 import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
 
-function readRoleFromCookies() {
+async function readRoleFromCookies() {
   // Support environments where `cookies` may be exported as a function or object
   try {
-    const cookieStore = typeof cookies === "function" ? cookies() : cookies;
+    const cookieStore = typeof cookies === "function" ? await cookies() : cookies;
     const roleCookie = cookieStore?.get?.(AUTH_COOKIE.ROLE);
     if (roleCookie) return roleCookie.value;
   } catch (e) {
@@ -37,8 +37,8 @@ function readRoleFromCookies() {
   return parsed[AUTH_COOKIE.ROLE] || "pengguna";
 }
 
-export default function AdminLayout({ children }) {
-  const role = readRoleFromCookies();
+export default async function AdminLayout({ children }) {
+  const role = await readRoleFromCookies();
 
   return (
     <section className="d-flex">
