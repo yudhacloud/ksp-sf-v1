@@ -1,6 +1,28 @@
 import PageHeader from "@/src/components/ui/PageHeader";
 
-export default function Page() {
+async function getSavingProducts() {
+  // Fetch data API server-side pada saat render halaman
+  // Mengggunakan URL absolut agar `fetch` server-side tidak gagal dengan path relatif
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const response = await fetch(`${baseUrl}/api/admin/saving-products`, { cache: "no-store" })
+
+  if (!response.ok) {
+    throw new Error("Gagal mengambil data produk simpanan")
+  }
+
+  const result = await response.json()
+  return result.saving_products || []
+
+}
+
+export default async function Page() {
+  const savingProducts = await getSavingProducts()
+  const totalProduk = savingProducts.length;
+  const activeProducts = savingProducts.filter((product) => product.is_active).length
+  const inActiveProducts = savingProducts.filter((product) => !product.is_active).length
+
+  console.log("saving: ", savingProducts);
+
   return (
     <section className="container py-3 admin-page">
       <PageHeader
@@ -9,15 +31,21 @@ export default function Page() {
         actions={<button className="btn btn-primary">Tambah Produk</button>}
       />
 
-      <div className="admin-grid">
+      <div className="admin-grid mb-4">
         <article className="admin-card">
-          <h3>Ringkasan Produk</h3>
-          <p className="text-muted">Jumlah produk simpanan yang tersedia untuk anggota.</p>
-          <p className="admin-stat-value">5 produk</p>
+          <p className="admin-stat-title">Total Produk</p>
+          <div className="admin-stat-value">{totalProduk}</div>
+          <p>Produk terdaftar dalam sistem.</p>
         </article>
         <article className="admin-card">
-          <h3>Data Produk</h3>
-          <p className="text-muted">Nama produk, jenis, nominal, dan status akan tampil di tabel.</p>
+          <p className="admin-stat-title">Total Produk Aktif</p>
+          <div className="admin-stat-value">{activeProducts}</div>
+          <p>Produk aktif dalam sistem.</p>
+        </article>
+        <article className="admin-card">
+          <p className="admin-stat-title">Total Produk Non-Aktif</p>
+          <div className="admin-stat-value">{inActiveProducts}</div>
+          <p>Produk non-aktif dalam sistem.</p>
         </article>
       </div>
     </section>

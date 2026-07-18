@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/src/lib/supabase/client";
 import { fetchMembers } from "@/src/services/members";
+import { assertAdminRequest } from "@/src/lib/auth/server";
 
-export async function GET() {
+export async function GET(request) {
+  const authGuardError = assertAdminRequest(request);
+  if (authGuardError) {
+    return authGuardError;
+  }
+
   try {
     const members = await fetchMembers();
     return NextResponse.json({ members });
@@ -12,6 +18,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const authGuardError = assertAdminRequest(request);
+  if (authGuardError) {
+    return authGuardError;
+  }
+
   const body = await request.json();
   const { full_name, email, phone, password, role } = body;
 

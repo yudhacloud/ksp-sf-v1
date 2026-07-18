@@ -9,7 +9,7 @@ export function authMiddleware(request) {
   const role = roleCookie?.value;
   const userId = userIdCookie?.value;
 
-  const isAdminPath = pathname.startsWith("/admin");
+  const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
   const isDashboardPath = pathname.startsWith("/dashboard");
   const isAuthPage = pathname === "/login" || pathname === "/register";
 

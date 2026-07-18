@@ -1,17 +1,28 @@
 import PageHeader from "@/src/components/ui/PageHeader";
 import MembersTable from "@/src/components/admin/MembersTable";
+import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
 async function getMembers() {
   // Fetch data dari API server-side pada saat render halaman.
   // Gunakan URL absolut agar `fetch` server-side tidak gagal dengan path relatif.
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const response = await fetch(`${baseUrl}/api/admin/members`, { cache: "no-store" });
+  const authHeaders = await getInternalAuthFetchHeaders();
+  const response = await fetch(`${baseUrl}/api/admin/members`, {
+    cache: "no-store",
+    headers: authHeaders,
+  });
 
-  if (!response.ok) {
-    throw new Error("Gagal mengambil data anggota.");
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("Respons API member bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
   }
 
   const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Gagal mengambil data anggota.");
+  }
+
   return result.members || [];
 }
 
