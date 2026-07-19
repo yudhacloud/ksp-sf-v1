@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/src/lib/supabase/client";
-import { fetchMembers } from "@/src/services/members";
+import { createMember, fetchMembers } from "@/src/services/members";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 
 export async function GET(request) {
@@ -33,58 +32,18 @@ export async function POST(request) {
     );
   }
 
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Supabase admin client tidak tersedia." },
-      { status: 500 }
-    );
-  }
-
-  const normalizedRole = role === "admin" ? "admin" : "pengguna";
-  const memberNumber = `M-${email.split("@")[0]}-${Date.now().toString().slice(-5)}`;
-
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    user_metadata: {
+  try {
+    const member = await createMember({
       full_name,
+      email,
       phone,
-    },
-    email_confirm: true,
-    role: normalizedRole,
-  });
+      password,
+      role,
+    });
 
-  if (authError) {
-    return NextResponse.json({ error: authError.message }, { status: 400 });
+    return NextResponse.json({ member });
+  } catch (error) {
+    const status = error.message.includes("Supabase admin client") ? 500 : 400;
+    return NextResponse.json({ error: error.message }, { status });
   }
-
-  const userId = authData.user?.id;
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Gagal memperoleh ID pengguna setelah pembuatan auth." },
-      { status: 500 }
-    );
-  }
-
-  const { data: profileData, error: profileError } = await supabaseAdmin
-    .from("profiles")
-    .insert([
-      {
-        id: userId,
-        member_number: memberNumber,
-        full_name,
-        email,
-        phone,
-        role: normalizedRole,
-        status: true,
-      },
-    ])
-    .select("*")
-    .single();
-
-  if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ member: profileData });
 }

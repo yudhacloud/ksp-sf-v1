@@ -1,3 +1,4 @@
+import SavingProductsTable from "@/src/components/admin/saving-products-table/SavingProductsTable";
 import PageHeader from "@/src/components/ui/PageHeader";
 import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
@@ -40,7 +41,9 @@ export default async function Page() {
       <PageHeader
         title="Produk Simpanan"
         subtitle="Kelola produk simpanan koperasi dan atur opsi bagi anggota."
-        actions={<button className="btn btn-primary">Tambah Produk</button>}
+        actions={<a href="/admin/saving-products/create" className="btn btn-primary">
+          Tambah Produk Simpanan
+        </a>}
       />
 
       <div className="admin-grid mb-4">
@@ -60,6 +63,8 @@ export default async function Page() {
           <p>Produk non-aktif dalam sistem.</p>
         </article>
       </div>
+
+      <SavingProductsTable savingProducts={savingProducts} />
     </section>
   );
 }

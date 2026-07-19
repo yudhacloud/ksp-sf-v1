@@ -23,6 +23,57 @@ export async function fetchMembers() {
   return data;
 }
 
+export async function createMember(payload) {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client tidak tersedia.");
+  }
+
+  const normalizedRole = payload.role === "admin" ? "admin" : "pengguna";
+  const memberNumber = `M-${payload.email.split("@")[0]}-${Date.now().toString().slice(-5)}`;
+
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: payload.email,
+    password: payload.password,
+    user_metadata: {
+      full_name: payload.full_name,
+      phone: payload.phone,
+    },
+    email_confirm: true,
+    role: normalizedRole,
+  });
+
+  if (authError) {
+    throw new Error(authError.message);
+  }
+
+  const userId = authData.user?.id;
+  if (!userId) {
+    throw new Error("Gagal memperoleh ID pengguna setelah pembuatan auth.");
+  }
+
+  const { data: profileData, error: profileError } = await supabaseAdmin
+    .from("profiles")
+    .insert([
+      {
+        id: userId,
+        member_number: memberNumber,
+        full_name: payload.full_name,
+        email: payload.email,
+        phone: payload.phone,
+        role: normalizedRole,
+        status: true,
+      },
+    ])
+    .select("id, member_number, full_name, email, phone, status, created_at, role")
+    .single();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  return profileData;
+}
+
 export async function fetchMemberById(memberId) {
   if (!supabaseAdmin) {
     throw new Error("Supabase admin client tidak tersedia.");
