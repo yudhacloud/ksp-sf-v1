@@ -15,7 +15,7 @@ async function getSavingProducts() {
 
   const contentType = response.headers.get("content-type") || ""
   if (!contentType.includes("application/json")) {
-    throw new Error("Respons API member bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
+    throw new Error("Respons API saving product bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
   }
 
   const result = await response.json()
@@ -33,8 +33,6 @@ export default async function Page() {
   const totalProduk = savingProducts.length;
   const activeProducts = savingProducts.filter((product) => product.is_active).length
   const inActiveProducts = savingProducts.filter((product) => !product.is_active).length
-
-  console.log("saving: ", savingProducts);
 
   return (
     <section className="container py-3 admin-page">
