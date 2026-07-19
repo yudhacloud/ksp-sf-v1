@@ -1,16 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import styles from "./MembersTable.module.css";
+import { useRouter } from "next/navigation";
 
 /**
  * Komponen client untuk menampilkan tabel anggota.
  * Search dan filter dijalankan di frontend menggunakan data yang sudah di-fetch.
  */
 export default function MembersTable({ members }) {
+   const router = useRouter();
    const [search, setSearch] = useState("");
    const [statusFilter, setStatusFilter] = useState("Semua");
    const [joinedFilter, setJoinedFilter] = useState("Semua waktu");
+   const [deletingMemberId, setDeletingMemberId] = useState(null);
 
    const filteredMembers = useMemo(() => {
       const normalizedSearch = search.trim().toLowerCase();
@@ -42,6 +44,35 @@ export default function MembersTable({ members }) {
          return true;
       });
    }, [members, search, statusFilter, joinedFilter]);
+
+   async function handleDelete(memberId, memberName) {
+      const confirmed = window.confirm(`Hapus anggota ${memberName}? Tindakan ini tidak bisa dibatalkan.`);
+
+      if (!confirmed) {
+         return;
+      }
+
+      setDeletingMemberId(memberId);
+
+      try {
+         const response = await fetch(`/api/admin/members/${memberId}`, {
+            method: "DELETE",
+         });
+
+         const result = await response.json();
+
+         if (!response.ok) {
+            window.alert(result.error || "Gagal menghapus anggota.");
+            return;
+         }
+
+         router.refresh();
+      } catch (error) {
+         window.alert(error?.message || "Gagal menghubungi server.");
+      } finally {
+         setDeletingMemberId(null);
+      }
+   }
 
    return (
       <div>
@@ -108,29 +139,56 @@ export default function MembersTable({ members }) {
                         <th>HP</th>
                         <th>Gabung</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                      </tr>
                   </thead>
                   <tbody>
-                     {filteredMembers.map((member) => (
-                        <tr key={member.id}>
-                           <td>{member.member_number}</td>
-                           <td>{member.full_name}</td>
-                           <td>{member.email || "-"}</td>
-                           <td>{member.phone || "-"}</td>
-                           <td>{new Date(member.created_at).toLocaleDateString("id-ID", {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                           })}</td>
-                           <td>
-                              <span
-                                 className={`admin-status-badge ${member.status ? "approved" : "pending"}`}
-                              >
-                                 {member.status ? "Aktif" : "Nonaktif"}
-                              </span>
+                     {filteredMembers.length === 0 ? (
+                        <tr>
+                           <td colSpan="7" className="text-center py-4 text-muted">
+                              Tidak ada data anggota yang cocok.
                            </td>
                         </tr>
-                     ))}
+                     ) : (
+                        filteredMembers.map((member) => (
+                           <tr key={member.id}>
+                              <td>{member.member_number}</td>
+                              <td>{member.full_name}</td>
+                              <td>{member.email || "-"}</td>
+                              <td>{member.phone || "-"}</td>
+                              <td>{new Date(member.created_at).toLocaleDateString("id-ID", {
+                                 day: "2-digit",
+                                 month: "long",
+                                 year: "numeric",
+                              })}</td>
+                              <td>
+                                 <span
+                                    className={`admin-status-badge ${member.status ? "approved" : "pending"}`}
+                                 >
+                                    {member.status ? "Aktif" : "Nonaktif"}
+                                 </span>
+                              </td>
+                              <td>
+                                 <div className="d-flex gap-2 flex-wrap">
+                                    <a
+                                       href={`/admin/members/${member.id}/edit`}
+                                       className="btn btn-sm btn-outline-primary"
+                                    >
+                                       Edit
+                                    </a>
+                                    <button
+                                       type="button"
+                                       className="btn btn-sm btn-outline-danger"
+                                       onClick={() => handleDelete(member.id, member.full_name)}
+                                       disabled={deletingMemberId === member.id}
+                                    >
+                                       {deletingMemberId === member.id ? "Menghapus..." : "Hapus"}
+                                    </button>
+                                 </div>
+                              </td>
+                           </tr>
+                        ))
+                     )}
                   </tbody>
                </table>
             </div>

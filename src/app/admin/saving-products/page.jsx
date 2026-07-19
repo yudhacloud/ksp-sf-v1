@@ -1,16 +1,28 @@
 import PageHeader from "@/src/components/ui/PageHeader";
+import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
 async function getSavingProducts() {
   // Fetch data API server-side pada saat render halaman
   // Mengggunakan URL absolut agar `fetch` server-side tidak gagal dengan path relatif
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const response = await fetch(`${baseUrl}/api/admin/saving-products`, { cache: "no-store" })
+  const authHeaders = await getInternalAuthFetchHeaders()
+  const response = await fetch(`${baseUrl}/api/admin/saving-products`,
+    {
+      cache: "no-store",
+      headers: authHeaders
+    })
+
+  const contentType = response.headers.get("content-type") || ""
+  if (!contentType.includes("application/json")) {
+    throw new Error("Respons API member bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
+  }
+
+  const result = await response.json()
 
   if (!response.ok) {
     throw new Error("Gagal mengambil data produk simpanan")
   }
 
-  const result = await response.json()
   return result.saving_products || []
 
 }
