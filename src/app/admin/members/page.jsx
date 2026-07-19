@@ -1,5 +1,5 @@
 import PageHeader from "@/src/components/ui/PageHeader";
-import MembersTable from "@/src/components/admin/MembersTable";
+import MembersTable from "@/src/components/admin/member-table/MembersTable";
 import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
 async function getMembers() {
