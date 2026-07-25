@@ -1,21 +1,29 @@
--- RLS policy set for the KSP schema.
+-- RLS policy set for the KSP schema (condensed with FOR ALL for admin CRUD).
 --
 -- Assumption:
 -- - Admin identity is stored in JWT app_metadata.role = 'admin'.
 -- - Member identity is auth.uid() matching public.profiles.id.
--- - Service role queries bypass RLS, so these policies matter for authenticated user-context access.
+-- - Service role queries bypass RLS.
+--
+-- Optional cleanup before re-running this file:
+-- drop policy if exists "admin full access profiles" on public.profiles;
+-- drop policy if exists "member can read own profile" on public.profiles;
+-- ...repeat for legacy policy names as needed.
 
 -- =========================================================
 -- PROFILES
 -- =========================================================
 alter table public.profiles enable row level security;
 
-create policy "admin can read all profiles"
+create policy "admin full access profiles"
 on public.profiles
 as permissive
-for select
+for all
 to authenticated
 using (
+  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+)
+with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
@@ -28,19 +36,15 @@ using (
   id = auth.uid()
 );
 
-create policy "admin can insert profiles"
-on public.profiles
-as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
+-- =========================================================
+-- SAVING PRODUCTS
+-- =========================================================
+alter table public.saving_products enable row level security;
 
-create policy "admin can update profiles"
-on public.profiles
+create policy "admin full access saving products"
+on public.saving_products
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -48,30 +52,6 @@ using (
 with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
-
-create policy "admin can delete profiles"
-on public.profiles
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- SAVING PRODUCTS
--- =========================================================
-alter table public.saving_products enable row level security;
-
-create policy "admin can read all saving products"
-on public.saving_products
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
 
 create policy "authenticated users can read active saving products"
 on public.saving_products
@@ -82,19 +62,15 @@ using (
   is_active = true
 );
 
-create policy "admin can insert saving products"
-on public.saving_products
-as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
+-- =========================================================
+-- SAVING TRANSACTIONS
+-- =========================================================
+alter table public.saving_transactions enable row level security;
 
-create policy "admin can update saving products"
-on public.saving_products
+create policy "admin full access saving transactions"
+on public.saving_transactions
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -103,20 +79,6 @@ with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
-create policy "admin can delete saving products"
-on public.saving_products
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- SAVING TRANSACTIONS
--- =========================================================
-alter table public.saving_transactions enable row level security;
-
 create policy "member can read own saving transactions"
 on public.saving_transactions
 as permissive
@@ -124,15 +86,6 @@ for select
 to authenticated
 using (
   member_id = auth.uid()
-);
-
-create policy "admin can read all saving transactions"
-on public.saving_transactions
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
 create policy "member can insert own saving transactions"
@@ -145,10 +98,15 @@ with check (
   and status = 'PENDING'
 );
 
-create policy "admin can update saving transactions"
-on public.saving_transactions
+-- =========================================================
+-- LOAN PRODUCTS
+-- =========================================================
+alter table public.loan_products enable row level security;
+
+create policy "admin full access loan products"
+on public.loan_products
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -157,30 +115,7 @@ with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
-create policy "admin can delete saving transactions"
-on public.saving_transactions
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
 
--- =========================================================
--- LOAN PRODUCTS
--- =========================================================
-alter table public.loan_products enable row level security;
-
-create policy "admin can read all loan products"
-on public.loan_products
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- Optional: let authenticated members read active loan products.
 create policy "authenticated users can read active loan products"
 on public.loan_products
 as permissive
@@ -190,19 +125,15 @@ using (
   is_active = true
 );
 
-create policy "admin can insert loan products"
-on public.loan_products
-as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
+-- =========================================================
+-- LOAN APPLICATIONS
+-- =========================================================
+alter table public.loan_applications enable row level security;
 
-create policy "admin can update loan products"
-on public.loan_products
+create policy "admin full access loan applications"
+on public.loan_applications
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -211,20 +142,6 @@ with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
-create policy "admin can delete loan products"
-on public.loan_products
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- LOAN APPLICATIONS
--- =========================================================
-alter table public.loan_applications enable row level security;
-
 create policy "member can read own loan applications"
 on public.loan_applications
 as permissive
@@ -232,15 +149,6 @@ for select
 to authenticated
 using (
   member_id = auth.uid()
-);
-
-create policy "admin can read all loan applications"
-on public.loan_applications
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
 create policy "member can insert own loan applications"
@@ -253,10 +161,16 @@ with check (
   and status = 'PENDING'
 );
 
-create policy "admin can update loan applications"
-on public.loan_applications
+
+-- =========================================================
+-- LOANS
+-- =========================================================
+alter table public.loans enable row level security;
+
+create policy "admin full access loans"
+on public.loans
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -264,20 +178,6 @@ using (
 with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
-
-create policy "admin can delete loan applications"
-on public.loan_applications
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- LOANS
--- =========================================================
-alter table public.loans enable row level security;
 
 create policy "member can read own loans"
 on public.loans
@@ -288,28 +188,15 @@ using (
   member_id = auth.uid()
 );
 
-create policy "admin can read all loans"
-on public.loans
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
+-- =========================================================
+-- LOAN INSTALLMENTS
+-- =========================================================
+alter table public.loan_installments enable row level security;
 
-create policy "admin can insert loans"
-on public.loans
+create policy "admin full access loan installments"
+on public.loan_installments
 as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
-create policy "admin can update loans"
-on public.loans
-as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -317,20 +204,6 @@ using (
 with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
-
-create policy "admin can delete loans"
-on public.loans
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- LOAN INSTALLMENTS
--- =========================================================
-alter table public.loan_installments enable row level security;
 
 create policy "member can read own loan installments"
 on public.loan_installments
@@ -346,28 +219,15 @@ using (
   )
 );
 
-create policy "admin can read all loan installments"
-on public.loan_installments
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
+-- =========================================================
+-- INSTALLMENT PAYMENTS
+-- =========================================================
+alter table public.installment_payments enable row level security;
 
-create policy "admin can insert loan installments"
-on public.loan_installments
+create policy "admin full access installment payments"
+on public.installment_payments
 as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
-create policy "admin can update loan installments"
-on public.loan_installments
-as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -375,20 +235,6 @@ using (
 with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
-
-create policy "admin can delete loan installments"
-on public.loan_installments
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- INSTALLMENT PAYMENTS
--- =========================================================
-alter table public.installment_payments enable row level security;
 
 create policy "member can read own installment payments"
 on public.installment_payments
@@ -403,15 +249,6 @@ using (
     where li.id = installment_payments.installment_id
       and l.member_id = auth.uid()
   )
-);
-
-create policy "admin can read all installment payments"
-on public.installment_payments
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
 create policy "member can insert own installment payments"
@@ -430,10 +267,15 @@ with check (
   and status = 'PENDING'
 );
 
-create policy "admin can update installment payments"
-on public.installment_payments
+-- =========================================================
+-- NOTIFICATIONS
+-- =========================================================
+alter table public.notifications enable row level security;
+
+create policy "admin full access notifications"
+on public.notifications
 as permissive
-for update
+for all
 to authenticated
 using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
@@ -441,20 +283,6 @@ using (
 with check (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
-
-create policy "admin can delete installment payments"
-on public.installment_payments
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
--- =========================================================
--- NOTIFICATIONS
--- =========================================================
-alter table public.notifications enable row level security;
 
 create policy "member can read own notifications"
 on public.notifications
@@ -477,45 +305,6 @@ with check (
   member_id = auth.uid()
 );
 
-create policy "admin can read all notifications"
-on public.notifications
-as permissive
-for select
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
-create policy "admin can insert notifications"
-on public.notifications
-as permissive
-for insert
-to authenticated
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
-create policy "admin can update notifications"
-on public.notifications
-as permissive
-for update
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-)
-with check (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
-create policy "admin can delete notifications"
-on public.notifications
-as permissive
-for delete
-to authenticated
-using (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-);
-
 -- =========================================================
 -- AUDIT LOGS
 -- =========================================================
@@ -530,5 +319,3 @@ using (
   (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
 );
 
--- Usually audit logs are written by service role from backend.
--- Service role bypasses RLS, so insert policies are optional.
