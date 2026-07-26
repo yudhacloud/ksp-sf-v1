@@ -333,36 +333,36 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
                               </td>
                               <td>
                                  {transaction.status === "PENDING" ? (
-                                       <div className="d-flex gap-2 flex-wrap">
+                                    <div className="d-flex gap-2 flex-wrap">
                                        <button
                                           type="button"
-                                             className="btn btn-sm btn-success d-inline-flex align-items-center justify-content-center"
-                                             style={{ width: 36, height: 36 }}
+                                          className="btn btn-sm btn-success d-inline-flex align-items-center justify-content-center"
+                                          style={{ width: 36, height: 36 }}
                                           disabled={updatingTransactionId === transaction.id}
                                           onClick={() => handleUpdateStatus(transaction, "APPROVED")}
-                                             aria-label="Terima transaksi"
-                                             title="Terima"
+                                          aria-label="Terima transaksi"
+                                          title="Terima"
                                        >
-                                             {updatingTransactionId === transaction.id ? (
-                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                                             ) : (
-                                                <CheckIcon />
-                                             )}
+                                          {updatingTransactionId === transaction.id ? (
+                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                                          ) : (
+                                             <CheckIcon />
+                                          )}
                                        </button>
                                        <button
                                           type="button"
-                                             className="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center"
-                                             style={{ width: 36, height: 36 }}
+                                          className="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center"
+                                          style={{ width: 36, height: 36 }}
                                           disabled={updatingTransactionId === transaction.id}
-                                             onClick={() => openRejectionModal(transaction)}
-                                             aria-label="Tolak transaksi"
-                                             title="Tolak"
+                                          onClick={() => openRejectionModal(transaction)}
+                                          aria-label="Tolak transaksi"
+                                          title="Tolak"
                                        >
-                                             {updatingTransactionId === transaction.id ? (
-                                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                                             ) : (
-                                                <XIcon />
-                                             )}
+                                          {updatingTransactionId === transaction.id ? (
+                                             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                                          ) : (
+                                             <XIcon />
+                                          )}
                                        </button>
                                     </div>
                                  ) : (
