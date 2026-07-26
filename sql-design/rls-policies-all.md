@@ -96,6 +96,73 @@ to authenticated
 with check (
   member_id = auth.uid()
   and status = 'PENDING'
+  and (
+    saving_obligation_id is null
+    or exists (
+      select 1
+      from public.saving_obligations so
+      join public.saving_accounts sa on sa.id = so.saving_account_id
+      where so.id = saving_transactions.saving_obligation_id
+        and sa.member_id = auth.uid()
+    )
+  )
+);
+
+-- =========================================================
+-- SAVING ACCOUNTS
+-- =========================================================
+alter table public.saving_accounts enable row level security;
+
+create policy "admin full access saving accounts"
+on public.saving_accounts
+as permissive
+for all
+to authenticated
+using (
+  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+)
+with check (
+  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+);
+
+create policy "member can read own saving accounts"
+on public.saving_accounts
+as permissive
+for select
+to authenticated
+using (
+  member_id = auth.uid()
+);
+
+-- =========================================================
+-- SAVING OBLIGATIONS
+-- =========================================================
+alter table public.saving_obligations enable row level security;
+
+create policy "admin full access saving obligations"
+on public.saving_obligations
+as permissive
+for all
+to authenticated
+using (
+  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+)
+with check (
+  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+);
+
+create policy "member can read own saving obligations"
+on public.saving_obligations
+as permissive
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.saving_accounts sa
+    where sa.id = saving_obligations.saving_account_id
+      and sa.member_id = auth.uid()
+  )
 );
 
 -- =========================================================

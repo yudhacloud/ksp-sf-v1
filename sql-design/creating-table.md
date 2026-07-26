@@ -1,5 +1,7 @@
 -- KSP Schema for Supabase
--- Drop existing schema objects so the schema can be recreated cleanly.
+-- Full bootstrap only. Do not re-run this file against an existing Supabase database,
+-- because the DROP statements below will remove data and any existing RLS policies.
+-- Use sql-design/monitoring-simpanan-migration.sql for non-destructive changes.
 DROP TABLE IF EXISTS public.installment_payments CASCADE;
 DROP TABLE IF EXISTS public.loan_installments CASCADE;
 DROP TABLE IF EXISTS public.loans CASCADE;
