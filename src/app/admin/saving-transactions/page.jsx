@@ -1,7 +1,33 @@
 import SavingTransactionsTable from "@/src/components/admin/saving-transactions-table/SavingTransactionsTable";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
-export default function Page() {
+async function getSavingTransactions() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const authHeaders = await getInternalAuthFetchHeaders()
+  const response = await fetch(`${baseUrl}/api/admin/saving-transactions`,
+    {
+      cache: "no-store",
+      headers: authHeaders
+    })
+
+  const contentType = response.headers.get("content-type") || ""
+  if (!contentType.includes("application/json")) {
+    throw new Error("Respons API saving product bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
+  }
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.error || "Gagal mengambil data transaksi simpanan")
+  }
+
+  return result.saving_transactions || []
+}
+
+export default async function Page() {
+  const savingTransactions = await getSavingTransactions()
+
   return (
     <section className="container py-3 admin-page">
       <PageHeader
@@ -27,7 +53,7 @@ export default function Page() {
         </article>
       </div>
 
-      <SavingTransactionsTable />
+      <SavingTransactionsTable savingTransactions={savingTransactions} />
     </section>
   );
 }
