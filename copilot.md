@@ -52,6 +52,9 @@ Buat Copilot menulis kode yang konsisten dengan struktur dan gaya proyek Next.js
 ## Penanganan data dan fungsi
 - Simpan logika data di `services`, bukan langsung di komponen halaman bila memungkinkan.
 - Untuk data anggota dan resource admin, gunakan service di `src/services/`.
+- Pisahkan logika service berdasarkan pengguna: service untuk admin dan service untuk user harus dibuat secara terpisah dan tidak saling bergantung secara langsung.
+- Untuk service user, gunakan pola penamaan yang jelas, misalnya `*-user.js` atau letakkan di area khusus seperti `src/services/user/` bila perlu.
+- Untuk service admin, gunakan pola penamaan yang jelas, misalnya `members.js`, `loan-products.js`, `saving-products.js`, atau letakkan di area khusus seperti `src/services/admin/` bila perlu.
 - Jika perlu endpoint khusus, letakkan API route di `src/app/api/...`.
 - Komponen halaman harus tetap tipis: fokus pada layout, statistik, dan pemanggilan komponen.
 - Gunakan server-side fetch (`page.jsx` async) untuk memuat data awal dari API route.

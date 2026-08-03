@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
+import { AUTH_COOKIE, COOKIE_OPTIONS } from "@/src/lib/auth/cookies";
 import { createSavingTransaction } from "@/src/services/saving-transactions-user";
+
+function isAuthError(error) {
+   const message = String(error?.message || "").toLowerCase();
+   return message.includes("jwt") || message.includes("token") || message.includes("expired") || message.includes("unauthorized") || message.includes("invalid");
+}
 
 export async function POST(request) {
    const userId = request.cookies.get(AUTH_COOKIE.USER_ID)?.value;
    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      const response = NextResponse.json({ error: "Sesi Anda telah berakhir. Silakan login kembali." }, { status: 401 });
+      response.cookies.delete(AUTH_COOKIE.ACCESS_TOKEN, COOKIE_OPTIONS);
+      response.cookies.delete(AUTH_COOKIE.ROLE, COOKIE_OPTIONS);
+      response.cookies.delete(AUTH_COOKIE.USER_ID, COOKIE_OPTIONS);
+      return response;
    }
 
    try {
@@ -16,6 +25,14 @@ export async function POST(request) {
       const paymentDate = body.paymentDate;
       const note = typeof body.note === "string" ? body.note.trim() : "";
       const proofUrl = typeof body.proofUrl === "string" ? body.proofUrl.trim() : null;
+
+      if (!accessToken) {
+         const response = NextResponse.json({ error: "Sesi Anda telah berakhir. Silakan login kembali." }, { status: 401 });
+         response.cookies.delete(AUTH_COOKIE.ACCESS_TOKEN, COOKIE_OPTIONS);
+         response.cookies.delete(AUTH_COOKIE.ROLE, COOKIE_OPTIONS);
+         response.cookies.delete(AUTH_COOKIE.USER_ID, COOKIE_OPTIONS);
+         return response;
+      }
 
       if (!obligationId || !amount || amount <= 0) {
          return NextResponse.json({ error: "Data pembayaran tidak lengkap." }, { status: 400 });
@@ -33,6 +50,14 @@ export async function POST(request) {
 
       return NextResponse.json({ transaction });
    } catch (error) {
+      if (isAuthError(error)) {
+         const response = NextResponse.json({ error: "Sesi Anda telah berakhir. Silakan login kembali." }, { status: 401 });
+         response.cookies.delete(AUTH_COOKIE.ACCESS_TOKEN, COOKIE_OPTIONS);
+         response.cookies.delete(AUTH_COOKIE.ROLE, COOKIE_OPTIONS);
+         response.cookies.delete(AUTH_COOKIE.USER_ID, COOKIE_OPTIONS);
+         return response;
+      }
+
       return NextResponse.json({ error: error.message }, { status: 500 });
    }
 }

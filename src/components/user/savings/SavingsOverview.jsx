@@ -84,6 +84,12 @@ export default function SavingsOverview() {
          const response = await fetch("/api/savings/overview");
          const result = await response.json();
          if (!response.ok) {
+            if (response.status === 401) {
+               if (typeof window !== "undefined") {
+                  window.location.href = "/login";
+               }
+               return;
+            }
             throw new Error(result.error || "Gagal memuat data simpanan.");
          }
 
@@ -117,7 +123,11 @@ export default function SavingsOverview() {
    }, []);
 
    useEffect(() => {
-      loadOverview();
+      const timerId = window.setTimeout(() => {
+         void loadOverview();
+      }, 0);
+
+      return () => window.clearTimeout(timerId);
    }, [loadOverview]);
 
    const summaryCards = useMemo(
@@ -284,6 +294,12 @@ export default function SavingsOverview() {
 
                               const result = await response.json();
                               if (!response.ok) {
+                                 if (response.status === 401) {
+                                    if (typeof window !== "undefined") {
+                                       window.location.href = "/login";
+                                    }
+                                    return;
+                                 }
                                  throw new Error(result.error || "Gagal mengirim pembayaran.");
                               }
 
