@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase, supabaseAdmin } from "@/src/lib/supabase/client";
 import { AUTH_COOKIE, COOKIE_OPTIONS } from "@/src/lib/auth/cookies";
+import { enrollMemberInDefaultSavingProducts } from "@/src/services/saving-accounts-user";
 
 export async function POST(request) {
   const { email, password, displayName, phone, role } = await request.json();
@@ -44,7 +45,7 @@ export async function POST(request) {
   }
 
   const memberNumber = `M-${user.id.slice(0, 8).toUpperCase()}`;
-  const userRole = role || "pengguna";
+  const userRole = role === "admin" ? "admin" : "member";
 
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
@@ -63,6 +64,14 @@ export async function POST(request) {
 
   if (profileError) {
     return NextResponse.json({ error: profileError.message }, { status: 400 });
+  }
+
+  if (userRole === "member") {
+    try {
+      await enrollMemberInDefaultSavingProducts({ memberId: user.id });
+    } catch (enrollError) {
+      console.error("Gagal menambahkan akun simpanan default untuk member baru:", enrollError);
+    }
   }
 
   const response = NextResponse.json({ user, profile });

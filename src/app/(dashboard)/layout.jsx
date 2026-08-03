@@ -32,7 +32,7 @@ function readRoleFromCookies() {
       })
   );
 
-  return parsed[AUTH_COOKIE.ROLE] || "pengguna";
+  return parsed[AUTH_COOKIE.ROLE] || "member";
 }
 
 export default function DashboardLayout({ children }) {

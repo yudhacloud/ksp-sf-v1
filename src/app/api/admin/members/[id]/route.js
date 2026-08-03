@@ -43,7 +43,7 @@ export async function PATCH(request, { params }) {
   const body = await request.json();
   const fullName = body.full_name?.trim();
   const phone = body.phone?.trim() || null;
-  const role = body.role === "admin" ? "admin" : "pengguna";
+  const role = body.role === "admin" ? "admin" : "member";
   const status = Boolean(body.status);
 
   if (!fullName) {

@@ -45,7 +45,7 @@ export async function POST(request) {
     return NextResponse.json({ error: profileError.message }, { status: 400 });
   }
 
-  const userRole = profile?.role || "pengguna";
+  const userRole = profile?.role || "member";
   const response = NextResponse.json({ user: data.user, profile });
 
   if (data.session?.access_token) {

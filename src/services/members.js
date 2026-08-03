@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/src/lib/supabase/client";
+import { enrollMemberInDefaultSavingProducts } from "./saving-accounts-user";
 
 /**
  * Ambil seluruh data anggota dari tabel profiles.
@@ -28,7 +29,7 @@ export async function createMember(payload) {
     throw new Error("Supabase admin client tidak tersedia.");
   }
 
-  const normalizedRole = payload.role === "admin" ? "admin" : "pengguna";
+  const normalizedRole = payload.role === "admin" ? "admin" : "member";
   const memberNumber = `M-${payload.email.split("@")[0]}-${Date.now().toString().slice(-5)}`;
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -37,9 +38,9 @@ export async function createMember(payload) {
     user_metadata: {
       full_name: payload.full_name,
       phone: payload.phone,
+      role: normalizedRole,
     },
     email_confirm: true,
-    role: normalizedRole,
   });
 
   if (authError) {
@@ -69,6 +70,10 @@ export async function createMember(payload) {
 
   if (profileError) {
     throw new Error(profileError.message);
+  }
+
+  if (normalizedRole === "member") {
+    await enrollMemberInDefaultSavingProducts({ memberId: userId });
   }
 
   return profileData;

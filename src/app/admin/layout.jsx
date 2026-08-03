@@ -34,7 +34,7 @@ async function readRoleFromCookies() {
       })
   );
 
-  return parsed[AUTH_COOKIE.ROLE] || "pengguna";
+  return parsed[AUTH_COOKIE.ROLE] || "member";
 }
 
 export default async function AdminLayout({ children }) {

@@ -13,7 +13,7 @@ export default function AdminMemberEditPage() {
    const [fullName, setFullName] = useState("");
    const [email, setEmail] = useState("");
    const [phone, setPhone] = useState("");
-   const [role, setRole] = useState("pengguna");
+   const [role, setRole] = useState("member");
    const [status, setStatus] = useState(true);
    const [loading, setLoading] = useState(true);
    const [saving, setSaving] = useState(false);
@@ -47,7 +47,7 @@ export default function AdminMemberEditPage() {
             setFullName(member.full_name || "");
             setEmail(member.email || "");
             setPhone(member.phone || "");
-            setRole(member.role === "admin" ? "admin" : "pengguna");
+            setRole(member.role === "admin" ? "admin" : "member");
             setStatus(Boolean(member.status));
          } catch (error) {
             if (active) {
@@ -164,7 +164,7 @@ export default function AdminMemberEditPage() {
                            value={role}
                            onChange={(event) => setRole(event.target.value)}
                         >
-                           <option value="pengguna">Pengguna</option>
+                           <option value="member">Anggota</option>
                            <option value="admin">Admin</option>
                         </select>
                      </div>

@@ -10,7 +10,7 @@ export default function AdminMemberCreatePage() {
    const [email, setEmail] = useState("");
    const [phone, setPhone] = useState("");
    const [password, setPassword] = useState("");
-   const [role, setRole] = useState("pengguna");
+   const [role, setRole] = useState("member");
    const [loading, setLoading] = useState(false);
    const [message, setMessage] = useState("");
 
@@ -124,7 +124,7 @@ export default function AdminMemberCreatePage() {
                         value={role}
                         onChange={(event) => setRole(event.target.value)}
                      >
-                        <option value="pengguna">Pengguna</option>
+                        <option value="member">Anggota</option>
                         <option value="admin">Admin</option>
                      </select>
                   </div>

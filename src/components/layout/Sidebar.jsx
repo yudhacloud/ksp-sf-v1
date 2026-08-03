@@ -9,7 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Sidebar.module.css";
 
-export default function Sidebar({ role = "pengguna" }) {
+export default function Sidebar({ role = "member" }) {
    const pathname = usePathname();
    const router = useRouter();
    const normalizedPathname = pathname?.replace(/\/$/, "") || "/";
@@ -27,6 +27,7 @@ export default function Sidebar({ role = "pengguna" }) {
       { href: "/admin/dashboard", label: "Dashboard" },
       { href: "/admin/members", label: "Anggota" },
       { href: "/admin/saving-products", label: "Produk Simpanan" },
+      { href: "/admin/saving-monitoring", label: "Monitoring Simpanan" },
       { href: "/admin/saving-transactions", label: "Transaksi Simpanan" },
       { href: "/admin/loan-products", label: "Produk Pinjaman" },
       { href: "/admin/loan-applications", label: "Pengajuan Pinjaman" },
