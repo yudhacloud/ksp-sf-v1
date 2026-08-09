@@ -75,7 +75,10 @@ export async function fetchSavingOverviewForMember({ accessToken, memberId }) {
       throw new Error(transactionsError.message);
    }
 
-   const totalBalance = (transactions || []).filter((item) => item.status === "APPROVED").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+   const approvedTransactions = (transactions || []).filter((item) => item.status === "APPROVED");
+   const totalBalance = approvedTransactions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+   const mandatorySavings = approvedTransactions.filter((item) => Boolean(item.saving_obligation_id)).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+   const voluntarySavings = approvedTransactions.filter((item) => !item.saving_obligation_id).reduce((sum, item) => sum + Number(item.amount || 0), 0);
    const ongoingObligations = (obligations || []).filter((item) => item.status !== "PAID");
    const pendingObligations = ongoingObligations.filter((item) => item.status === "PENDING" || item.status === "OVERDUE").length;
 
@@ -99,8 +102,8 @@ export async function fetchSavingOverviewForMember({ accessToken, memberId }) {
 
    return {
       balance: totalBalance,
-      mandatorySavings: totalBalance,
-      voluntarySavings: 0,
+      mandatorySavings,
+      voluntarySavings,
       pendingObligations: pendingObligations,
       obligations: obligationSummaries,
       transactions: (transactions || []).map((transaction) => ({

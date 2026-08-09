@@ -1,65 +1,61 @@
-import Image from "next/image";
+import Link from "next/link";
 import styles from "./page.module.css";
+
+const benefits = [
+  {
+    title: "Simpanan Terarah",
+    description: "Pantau simpanan pokok, wajib, dan sukarela secara jelas dalam satu dashboard.",
+  },
+  {
+    title: "Tagihan yang Jelas",
+    description: "Lihat jatuh tempo, nominal tagihan, dan status pembayaran tanpa kebingungan.",
+  },
+  {
+    title: "Akses Cepat",
+    description: "Masuk kapan saja untuk melihat riwayat transaksi dan kebutuhan keuangan Anda.",
+  },
+];
 
 export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        <section className={styles.hero}>
+          <div className={styles.heroContent}>
+            <p className={styles.eyebrow}>KSP Sinergi Finansial</p>
+            <h1>Solusi keuangan anggota yang aman, cepat, dan transparan.</h1>
+            <p>
+              Nikmati pengalaman mengelola simpanan, tagihan, dan pinjaman dengan sistem yang sederhana namun profesional.
+            </p>
+            <div className={styles.ctas}>
+              <Link className={styles.primary} href="/login">
+                Masuk ke Akun
+              </Link>
+              <Link className={styles.secondary} href="/register">
+                Daftar Anggota
+              </Link>
+            </div>
+          </div>
+
+          <div className={styles.heroPanel}>
+            <div className={styles.panelBadge}>Anggota Terpercaya</div>
+            <h2>Kenapa anggota memilih kami?</h2>
+            <ul>
+              <li>Transaksi simpanan yang mudah dipantau</li>
+              <li>Informasi tagihan yang selalu up to date</li>
+              <li>Pelayanan digital yang efisien</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.features}>
+          {benefits.map((item) => (
+            <article className={styles.featureCard} key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </section>
       </main>
     </div>
   );

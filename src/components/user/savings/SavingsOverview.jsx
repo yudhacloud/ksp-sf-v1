@@ -132,10 +132,10 @@ export default function SavingsOverview() {
 
    const summaryCards = useMemo(
       () => [
-         { title: "Total Simpanan Saya", value: formatCurrency(overview.balance), caption: "Jumlah saldo simpanan yang sudah tercatat" },
-         { title: "Simpanan Pokok", value: overview.accounts.some((account) => account.type === "POKOK") ? "Aktif" : "Belum terdaftar", caption: "Pembayaran awal saat anggota bergabung" },
-         { title: "Simpanan Wajib", value: formatCurrency(overview.mandatorySavings), caption: "Tagihan bulanan yang sedang berjalan" },
-         { title: "Simpanan Sukarela", value: formatCurrency(overview.voluntarySavings), caption: "Setoran tambahan yang Anda kirim" },
+         { title: "Saldo Total Simpanan", value: formatCurrency(overview.balance), caption: "Jumlah setoran yang sudah disetujui dan masuk saldo Anda" },
+         { title: "Simpanan Pokok", value: overview.accounts.some((account) => account.type === "POKOK") ? "Aktif" : "Belum terdaftar", caption: "Tagihan awal yang muncul saat anggota pertama kali terdaftar" },
+         { title: "Simpanan Wajib", value: formatCurrency(overview.mandatorySavings), caption: "Kewajiban bulanan yang sudah dibayar atau masih tersisa" },
+         { title: "Simpanan Sukarela", value: formatCurrency(overview.voluntarySavings), caption: "Setoran tambahan yang Anda kirim sesuai kebutuhan" },
       ],
       [overview],
    );
@@ -157,9 +157,13 @@ export default function SavingsOverview() {
          </div>
 
          <div className="admin-card">
+            <div className="alert alert-info mb-3" role="status">
+               <strong>Penjelasan singkat:</strong> Simpanan pokok adalah tagihan awal saat anggota bergabung, simpanan wajib adalah kewajiban bulanan, dan simpanan sukarela adalah setoran tambahan yang fleksibel.
+            </div>
+
             <div className="d-flex flex-wrap gap-2 mb-3">
-               <button className={`btn ${activeTab === "billing" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("billing")}>Tagihan dan Pembayaran</button>
-               <button className={`btn ${activeTab === "transactions" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("transactions")}>Simpanan Sukarela</button>
+               <button className={`btn ${activeTab === "billing" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("billing")}>Tagihan Pokok & Wajib</button>
+               <button className={`btn ${activeTab === "transactions" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("transactions")}>Riwayat Simpanan Sukarela</button>
             </div>
 
             {feedback ? (
@@ -197,8 +201,8 @@ export default function SavingsOverview() {
                <div className="row g-4">
                   <div className="col-lg-7">
                      <div className="admin-card" style={{ padding: "1rem" }}>
-                        <h3 className="mb-3">Form Pembayaran</h3>
-                        <p className="text-muted">Pilih tagihan yang ingin Anda bayar. Form ini dapat dipakai untuk tagihan simpanan pokok maupun wajib.</p>
+                        <h3 className="mb-3">Form Pembayaran Tagihan</h3>
+                        <p className="text-muted">Pilih tagihan simpanan pokok atau wajib yang ingin Anda bayar. Form ini tidak digunakan untuk setoran simpanan sukarela.</p>
 
                         <div className="admin-form-group">
                            <label htmlFor="obligationSelect">Pilih Tagihan</label>
