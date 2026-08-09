@@ -11,6 +11,20 @@ function formatCurrency(value) {
    }).format(Number(value || 0));
 }
 
+async function parseResponseBody(response) {
+   const text = await response.text();
+
+   if (!text) {
+      return {};
+   }
+
+   try {
+      return JSON.parse(text);
+   } catch {
+      return { error: text.slice(0, 200) };
+   }
+}
+
 export default function LoanProductsTable({ loanProducts }) {
    const router = useRouter();
    const [search, setSearch] = useState("");
@@ -59,10 +73,11 @@ export default function LoanProductsTable({ loanProducts }) {
             }),
          });
 
-         const result = await response.json();
+         const result = await parseResponseBody(response);
 
          if (!response.ok) {
-            window.alert(result.error || "Gagal memperbarui status produk pinjaman.");
+            const message = result.error || "Gagal memperbarui status produk pinjaman.";
+            window.alert(message);
             return;
          }
 

@@ -5,110 +5,111 @@ export default function Page() {
     <section className="container py-3 admin-page">
       <PageHeader
         title="Admin Dashboard"
-        subtitle="Ringkasan kondisi koperasi dan aktivitas terbaru dalam satu halaman."
-        actions={<button className="btn btn-primary">Lihat Semua</button>}
+        subtitle="Pantau kondisi koperasi, review pengajuan pinjaman, dan tindaklanjuti aktivitas harian dengan cepat."
+        actions={
+          <div className="d-flex gap-2">
+            <button className="btn btn-outline-primary">Export Laporan</button>
+            <button className="btn btn-primary">Lihat Semua</button>
+          </div>
+        }
       />
 
-      <div className="admin-grid">
-        <article className="admin-card">
-          <p className="admin-stat-title">Total Anggota</p>
-          <div className="admin-stat-value">1.024</div>
-          <p>Anggota aktif yang tercatat di koperasi.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Total Simpanan</p>
-          <div className="admin-stat-value">Rp 7,4M</div>
-          <p>Saldo simpanan anggota saat ini.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Pinjaman Aktif</p>
-          <div className="admin-stat-value">320</div>
-          <p>Jumlah pinjaman yang sedang berjalan.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Pendapatan Bunga</p>
-          <div className="admin-stat-value">Rp 156.000</div>
-          <p>Pendapatan bunga bulan berjalan.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Dana Masuk</p>
-          <div className="admin-stat-value">Rp 2,1M</div>
-          <p>Transaksi masuk terbaru.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Dana Keluar</p>
-          <div className="admin-stat-value">Rp 980K</div>
-          <p>Pengeluaran kas terbaru.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Tunggakan</p>
-          <div className="admin-stat-value">54</div>
-          <p>Status pinjaman yang tertunda.</p>
-        </article>
-        <article className="admin-card">
-          <p className="admin-stat-title">Approval Pending</p>
-          <div className="admin-stat-value">18</div>
-          <p>Pengajuan menunggu tindakan administrasi.</p>
-        </article>
-      </div>
-
-      <section className="admin-section">
-        <div className="admin-section-header">
+      <div className="dashboard-shell">
+        <div className="dashboard-hero">
           <div>
-            <h3>Approval Center</h3>
-            <p className="text-muted">Pengajuan yang perlu ditindaklanjuti hari ini.</p>
+            <p className="dashboard-eyebrow">Operasional hari ini</p>
+            <h2>Ringkasan kinerja koperasi</h2>
+            <p className="mb-0">Ada 18 pengajuan menunggu persetujuan dan 7 pembayaran cicilan yang perlu diverifikasi.</p>
           </div>
-          <button className="btn btn-secondary">Lihat Semua</button>
+          <div className="dashboard-hero-actions">
+            <button className="btn btn-outline-primary">Review Pinjaman</button>
+            <button className="btn btn-primary">Buka Approval Center</button>
+          </div>
         </div>
 
-        <div className="admin-grid">
-          <article className="admin-card">
-            <p className="admin-stat-title">Simpanan Pending</p>
-            <div className="admin-stat-value">12</div>
-            <p>Permintaan konfirmasi bukti transfer.</p>
+        <div className="dashboard-stats">
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Total Anggota</p>
+            <div className="dashboard-stat-value">1.024</div>
+            <p className="dashboard-stat-caption">Anggota aktif yang tercatat di koperasi.</p>
           </article>
-          <article className="admin-card">
-            <p className="admin-stat-title">Pengajuan Pinjaman</p>
-            <div className="admin-stat-value">8</div>
-            <p>Pengajuan pinjaman yang belum disetujui.</p>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Total Simpanan</p>
+            <div className="dashboard-stat-value">Rp 7,4M</div>
+            <p className="dashboard-stat-caption">Saldo simpanan anggota saat ini.</p>
           </article>
-          <article className="admin-card">
-            <p className="admin-stat-title">Pembayaran Cicilan</p>
-            <div className="admin-stat-value">7</div>
-            <p>Cicilan yang perlu diverifikasi.</p>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Pinjaman Aktif</p>
+            <div className="dashboard-stat-value">320</div>
+            <p className="dashboard-stat-caption">Jumlah pinjaman yang sedang berjalan.</p>
+          </article>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Tunggakan</p>
+            <div className="dashboard-stat-value">54</div>
+            <p className="dashboard-stat-caption">Pinjaman yang membutuhkan perhatian lebih.</p>
           </article>
         </div>
-      </section>
 
-      <section className="admin-section">
-        <div className="admin-section-header">
-          <h3>Aktivitas Terbaru</h3>
-        </div>
+        <div className="dashboard-grid">
+          <section className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Approval Center</h3>
+                <p className="text-muted">Daftar kebutuhan tindakan yang paling mendesak.</p>
+              </div>
+              <button className="btn btn-outline-primary btn-sm">Lihat Semua</button>
+            </div>
 
-        <div className="admin-timeline">
-          <div className="admin-timeline-item">
-            <div>
-              <span className="badge-pill">Simpanan baru</span>
-              <p className="mb-1 mt-2">Simpanan anggota berhasil diterima.</p>
-              <small className="text-muted">15 menit lalu</small>
+            <div className="dashboard-list">
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Pengajuan pinjaman baru</strong>
+                  <p className="text-muted mb-0">8 permohonan menunggu review admin.</p>
+                </div>
+                <span className="dashboard-pill pending">Pending</span>
+              </div>
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Pembayaran cicilan</strong>
+                  <p className="text-muted mb-0">7 bukti pembayaran perlu dicek.</p>
+                </div>
+                <span className="dashboard-pill">Verifikasi</span>
+              </div>
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Konfirmasi simpanan</strong>
+                  <p className="text-muted mb-0">12 transaksi menunggu validasi.</p>
+                </div>
+                <span className="dashboard-pill success">Siap</span>
+              </div>
             </div>
-          </div>
-          <div className="admin-timeline-item">
-            <div>
-              <span className="badge-pill">Pengajuan pinjaman</span>
-              <p className="mb-1 mt-2">Anggota mengajukan pinjaman baru.</p>
-              <small className="text-muted">1 jam lalu</small>
+          </section>
+
+          <section className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Aksi Cepat</h3>
+                <p className="text-muted">Langkah yang sering dipakai admin.</p>
+              </div>
             </div>
-          </div>
-          <div className="admin-timeline-item">
-            <div>
-              <span className="badge-pill">Pembayaran</span>
-              <p className="mb-1 mt-2">Cicilan anggota berhasil diproses.</p>
-              <small className="text-muted">2 jam lalu</small>
+
+            <div className="dashboard-quick-list">
+              <div className="dashboard-quick-item">
+                <strong>Kelola Produk Pinjaman</strong>
+                <p className="text-muted mb-0">Tambah atau edit produk pinjaman utama.</p>
+              </div>
+              <div className="dashboard-quick-item">
+                <strong>Review Pengajuan</strong>
+                <p className="text-muted mb-0">Setujui atau tolak permohonan anggota.</p>
+              </div>
+              <div className="dashboard-quick-item">
+                <strong>Monitoring Cicilan</strong>
+                <p className="text-muted mb-0">Pantau pembayaran dan tunggakan.</p>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-      </section>
+      </div>
     </section>
   );
 }

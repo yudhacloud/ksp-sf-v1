@@ -3,59 +3,104 @@ import PageHeader from "@/src/components/ui/PageHeader";
 export default function Page() {
   return (
     <div className="container py-3">
-      <PageHeader title="User Dashboard" subtitle="Halaman sementara untuk pengguna yang sudah login." />
+      <PageHeader
+        title="Dashboard Anggota"
+        subtitle="Pantau simpanan, pinjaman, dan aktivitas keuangan Anda dalam satu tampilan."
+      />
 
-      <div className="row g-4">
-        <div className="col-12 col-md-6 col-xl-3">
-          <div className="card p-4 h-100">
-            <p className="text-uppercase text-muted mb-2">Total Projects</p>
-            <h2 className="mb-2">24</h2>
-            <p className="text-muted mb-0">Increased from last month</p>
+      <div className="dashboard-shell">
+        <div className="dashboard-hero">
+          <div>
+            <p className="dashboard-eyebrow">Status akun Anda</p>
+            <h2>Selamat datang di dashboard KSP</h2>
+            <p className="mb-0">Anda memiliki 1 pinjaman aktif dan 2 transaksi menunggu konfirmasi.</p>
+          </div>
+          <div className="dashboard-hero-actions">
+            <button className="btn btn-outline-primary">Lihat Profil</button>
+            <button className="btn btn-primary">Ajukan Pinjaman</button>
           </div>
         </div>
-        <div className="col-12 col-md-6 col-xl-3">
-          <div className="card p-4 h-100">
-            <p className="text-uppercase text-muted mb-2">Ended Projects</p>
-            <h2 className="mb-2">10</h2>
-            <p className="text-muted mb-0">Completed this period</p>
-          </div>
-        </div>
-        <div className="col-12 col-md-6 col-xl-3">
-          <div className="card p-4 h-100">
-            <p className="text-uppercase text-muted mb-2">Running Projects</p>
-            <h2 className="mb-2">12</h2>
-            <p className="text-muted mb-0">Currently in progress</p>
-          </div>
-        </div>
-        <div className="col-12 col-md-6 col-xl-3">
-          <div className="card p-4 h-100">
-            <p className="text-uppercase text-muted mb-2">Pending Projects</p>
-            <h2 className="mb-2">2</h2>
-            <p className="text-muted mb-0">Waiting approval</p>
-          </div>
-        </div>
-      </div>
 
-      <div className="row g-4 mt-3">
-        <div className="col-12 col-xl-8">
-          <div className="card p-4 h-100">
-            <h3 className="mb-3">Project Analytics</h3>
-            <div className="d-flex align-items-end gap-3">
-              <div className="flex-fill" style={{ minHeight: 120, background: "rgba(6, 71, 52, 0.08)", borderRadius: 24 }}></div>
-              <div className="flex-fill" style={{ minHeight: 150, background: "rgba(6, 71, 52, 0.16)", borderRadius: 24 }}></div>
-              <div className="flex-fill" style={{ minHeight: 180, background: "rgba(6, 71, 52, 0.24)", borderRadius: 24 }}></div>
-              <div className="flex-fill" style={{ minHeight: 150, background: "rgba(6, 71, 52, 0.12)", borderRadius: 24 }}></div>
-              <div className="flex-fill" style={{ minHeight: 100, background: "rgba(6, 71, 52, 0.06)", borderRadius: 24 }}></div>
+        <div className="dashboard-stats">
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Saldo Simpanan</p>
+            <div className="dashboard-stat-value">Rp 8.450.000</div>
+            <p className="dashboard-stat-caption">Saldo utama Anda saat ini.</p>
+          </article>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Pinjaman Aktif</p>
+            <div className="dashboard-stat-value">Rp 12.000.000</div>
+            <p className="dashboard-stat-caption">Sisa pokok pinjaman berjalan.</p>
+          </article>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Cicilan Jatuh Tempo</p>
+            <div className="dashboard-stat-value">3</div>
+            <p className="dashboard-stat-caption">Tagihan yang akan jatuh tempo bulan ini.</p>
+          </article>
+          <article className="dashboard-stat-card">
+            <p className="dashboard-stat-title">Status Pengajuan</p>
+            <div className="dashboard-stat-value">Pending</div>
+            <p className="dashboard-stat-caption">Pengajuan pinjaman menunggu review.</p>
+          </article>
+        </div>
+
+        <div className="dashboard-grid">
+          <section className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Aktivitas Terbaru</h3>
+                <p className="text-muted">Riwayat transaksi dan pembaruan akun Anda.</p>
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="col-12 col-xl-4">
-          <div className="card p-4 h-100">
-            <h3 className="mb-3">Reminders</h3>
-            <p className="mb-2">Meeting with Arc Company</p>
-            <p className="text-muted mb-3">12:00 pm - 04:00 pm</p>
-            <button className="btn btn-primary">Start Meeting</button>
-          </div>
+
+            <div className="dashboard-list">
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Pembayaran cicilan diterima</strong>
+                  <p className="text-muted mb-0">Pembayaran bulan Juli berhasil tercatat.</p>
+                </div>
+                <span className="dashboard-pill success">Selesai</span>
+              </div>
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Pengajuan pinjaman dikirim</strong>
+                  <p className="text-muted mb-0">Dokumen Anda sedang menunggu review admin.</p>
+                </div>
+                <span className="dashboard-pill pending">Pending</span>
+              </div>
+              <div className="dashboard-list-item">
+                <div>
+                  <strong>Jatuh tempo cicilan</strong>
+                  <p className="text-muted mb-0">Tagihan berikutnya akan jatuh tempo 15 Agustus.</p>
+                </div>
+                <span className="dashboard-pill danger">Perhatian</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h3>Aksi Cepat</h3>
+                <p className="text-muted">Layanan yang sering Anda butuhkan.</p>
+              </div>
+            </div>
+
+            <div className="dashboard-quick-list">
+              <div className="dashboard-quick-item">
+                <strong>Riwayat Simpanan</strong>
+                <p className="text-muted mb-0">Lihat semua transaksi simpanan Anda.</p>
+              </div>
+              <div className="dashboard-quick-item">
+                <strong>Tagihan Cicilan</strong>
+                <p className="text-muted mb-0">Cek jatuh tempo dan status pembayaran.</p>
+              </div>
+              <div className="dashboard-quick-item">
+                <strong>Profil Anggota</strong>
+                <p className="text-muted mb-0">Perbarui data diri dan kontak Anda.</p>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

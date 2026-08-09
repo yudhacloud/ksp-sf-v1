@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 import { fetchLoanProductById, updateLoanProductById } from "@/src/services/loan-products";
 
+async function getProductId(params) {
+  if (!params) {
+    return null;
+  }
+
+  if (typeof params === "object" && typeof params.then === "function") {
+    return (await params).id;
+  }
+
+  return params.id;
+}
+
 function normalizePayload(body) {
   return {
     name: typeof body?.name === "string" ? body.name.trim() : "",
@@ -20,36 +32,46 @@ function validatePayload(payload) {
   return null;
 }
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   const authGuardError = assertAdminRequest(request);
   if (authGuardError) {
     return authGuardError;
   }
 
   try {
-    const loan_product = await fetchLoanProductById(params.id);
+    const productId = await getProductId(context?.params);
+    if (!productId) {
+      return NextResponse.json({ error: "ID produk tidak valid." }, { status: 400 });
+    }
+
+    const loan_product = await fetchLoanProductById(productId);
     return NextResponse.json({ loan_product });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function PATCH(request, { params }) {
+export async function PATCH(request, context) {
   const authGuardError = assertAdminRequest(request);
   if (authGuardError) {
     return authGuardError;
   }
 
-  const body = await request.json();
-  const payload = normalizePayload(body);
-  const validationError = validatePayload(payload);
-
-  if (validationError) {
-    return NextResponse.json({ error: validationError }, { status: 400 });
-  }
-
   try {
-    const loan_product = await updateLoanProductById(params.id, payload);
+    const productId = await getProductId(context?.params);
+    if (!productId) {
+      return NextResponse.json({ error: "ID produk tidak valid." }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const payload = normalizePayload(body);
+    const validationError = validatePayload(payload);
+
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
+
+    const loan_product = await updateLoanProductById(productId, payload);
     return NextResponse.json({ loan_product });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

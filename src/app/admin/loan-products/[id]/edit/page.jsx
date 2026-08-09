@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/src/components/ui/PageHeader";
 
+async function parseResponseBody(response) {
+   const text = await response.text();
+
+   if (!text) {
+      return {};
+   }
+
+   try {
+      return JSON.parse(text);
+   } catch {
+      return { error: text.slice(0, 200) };
+   }
+}
+
 export default function AdminLoanProductEditPage() {
    const params = useParams();
    const router = useRouter();
@@ -31,7 +45,7 @@ export default function AdminLoanProductEditPage() {
 
          try {
             const response = await fetch(`/api/admin/loan-products/${productId}`);
-            const result = await response.json();
+            const result = await parseResponseBody(response);
 
             if (!response.ok) {
                throw new Error(result.error || "Gagal mengambil data produk pinjaman.");
@@ -42,6 +56,10 @@ export default function AdminLoanProductEditPage() {
             }
 
             const product = result.loan_product;
+            if (!product) {
+               throw new Error("Data produk pinjaman tidak ditemukan.");
+            }
+
             setName(product.name || "");
             setMaxAmount(String(product.max_amount ?? ""));
             setInterestRate(String(product.interest_rate ?? ""));
@@ -85,7 +103,7 @@ export default function AdminLoanProductEditPage() {
             }),
          });
 
-         const result = await response.json();
+         const result = await parseResponseBody(response);
          setSaving(false);
 
          if (!response.ok) {
