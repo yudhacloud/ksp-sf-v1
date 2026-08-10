@@ -8,16 +8,16 @@ import Header from "@/src/components/layout/Header";
 import { cookies, headers } from "next/headers";
 import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
 
-function readRoleFromCookies() {
+async function readRoleFromCookies() {
   try {
-    const cookieStore = typeof cookies === "function" ? cookies() : cookies;
+    const cookieStore = typeof cookies === "function" ? await cookies() : cookies;
     const roleCookie = cookieStore?.get?.(AUTH_COOKIE.ROLE);
     if (roleCookie) return roleCookie.value;
   } catch (e) {
     // ignore and fallback
   }
 
-  const h = headers();
+  const h = typeof headers === "function" ? await headers() : headers;
   const cookieHeader = (typeof h.get === "function" ? h.get("cookie") : h.cookie) || "";
   const parsed = Object.fromEntries(
     cookieHeader
@@ -35,8 +35,8 @@ function readRoleFromCookies() {
   return parsed[AUTH_COOKIE.ROLE] || "member";
 }
 
-export default function DashboardLayout({ children }) {
-  const role = readRoleFromCookies();
+export default async function DashboardLayout({ children }) {
+  const role = await readRoleFromCookies();
 
   return (
     <section className="d-flex">

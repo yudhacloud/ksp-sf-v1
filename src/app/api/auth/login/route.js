@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabase, supabaseAdmin } from "@/src/lib/supabase/client";
 import { AUTH_COOKIE, COOKIE_OPTIONS } from "@/src/lib/auth/cookies";
+import { createSupabaseServerClient } from "@/src/lib/supabase/server-client";
 
 export async function POST(request) {
   const { email, password } = await request.json();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedPassword = String(password || "");
 
-  if (!email || !password) {
+  if (!normalizedEmail || !normalizedPassword) {
     return NextResponse.json(
       { error: "Email dan password wajib diisi." },
       { status: 400 }
@@ -13,8 +16,8 @@ export async function POST(request) {
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+    email: normalizedEmail,
+    password: normalizedPassword,
   });
 
   if (error) {
@@ -28,24 +31,46 @@ export async function POST(request) {
     );
   }
 
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Supabase admin client tidak tersedia." },
-      { status: 500 }
-    );
+  let profile = null;
+
+  if (supabaseAdmin) {
+    const { data: adminProfile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    if (!profileError && adminProfile) {
+      profile = adminProfile;
+    }
   }
 
-  const { data: profile, error: profileError } = await supabaseAdmin
-    .from("profiles")
-    .select("*")
-    .eq("id", data.user.id)
-    .single();
+  if (!profile && data.session?.access_token) {
+    try {
+      const scopedClient = createSupabaseServerClient(data.session.access_token);
+      const { data: scopedProfile, error: scopedProfileError } = await scopedClient
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
 
-  if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 400 });
+      if (!scopedProfileError && scopedProfile) {
+        profile = scopedProfile;
+      }
+    } catch {
+      // keep fallback profile below
+    }
   }
 
-  const userRole = profile?.role || "member";
+  if (!profile) {
+    profile = {
+      id: data.user.id,
+      email: data.user.email,
+      role: "member",
+    };
+  }
+
+  const userRole = profile.role || "member";
   const response = NextResponse.json({ user: data.user, profile });
 
   if (data.session?.access_token) {

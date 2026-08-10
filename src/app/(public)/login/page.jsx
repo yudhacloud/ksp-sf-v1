@@ -16,12 +16,15 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password;
+
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
     });
 
     const result = await response.json();

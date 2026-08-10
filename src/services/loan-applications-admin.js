@@ -33,7 +33,8 @@ export async function fetchAllLoanApplications() {
       ),
       loan_products!loan_applications_loan_product_id_fkey (
         id,
-        name
+        name,
+        interest_rate
       )
     `)
       .order("created_at", { ascending: false });
@@ -104,7 +105,8 @@ export async function updateLoanApplicationStatusById(applicationId, status, adm
       ),
       loan_products!loan_applications_loan_product_id_fkey (
         id,
-        name
+        name,
+        interest_rate
       )
     `)
       .single();
@@ -139,7 +141,7 @@ export async function updateLoanApplicationStatusById(applicationId, status, adm
          const startDate = new Date();
          const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + tenorMonths, startDate.getDate());
 
-         const { error: createLoanError } = await supabaseAdmin
+         const { data: createdLoan, error: createLoanError } = await supabaseAdmin
             .from("loans")
             .insert([{
                application_id: applicationId,
@@ -152,10 +154,30 @@ export async function updateLoanApplicationStatusById(applicationId, status, adm
                start_date: formatDateValue(startDate),
                end_date: formatDateValue(endDate),
                status: "ACTIVE",
-            }]);
+            }])
+            .select("id")
+            .single();
 
          if (createLoanError) {
             throw new Error(createLoanError.message);
+         }
+
+         if (createdLoan?.id && tenorMonths > 0) {
+            const installments = Array.from({ length: tenorMonths }, (_, index) => ({
+               loan_id: createdLoan.id,
+               installment_number: index + 1,
+               due_date: formatDateValue(new Date(startDate.getFullYear(), startDate.getMonth() + index, startDate.getDate())),
+               amount_due: monthlyInstallment,
+               status: "PENDING",
+            }));
+
+            const { error: createInstallmentsError } = await supabaseAdmin
+               .from("loan_installments")
+               .insert(installments);
+
+            if (createInstallmentsError) {
+               throw new Error(createInstallmentsError.message);
+            }
          }
       }
    }

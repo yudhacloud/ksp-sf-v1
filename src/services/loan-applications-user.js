@@ -1,4 +1,5 @@
 import { supabase } from "@/src/lib/supabase/client";
+import { createSupabaseServerClient } from "@/src/lib/supabase/server-client";
 
 export async function fetchActiveLoanProductsForMembers() {
    if (!supabase) {
@@ -18,12 +19,39 @@ export async function fetchActiveLoanProductsForMembers() {
    return data || [];
 }
 
-export async function fetchMemberLoanApplications(memberId) {
-   if (!supabase) {
+function formatInstallmentDate(value) {
+   if (!value) {
+      return "";
+   }
+
+   const parsed = new Date(value);
+   if (Number.isNaN(parsed.getTime())) {
+      return value;
+   }
+
+   return parsed.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+   });
+}
+
+export async function fetchMemberLoanApplications(memberId, accessToken = null) {
+   let client = supabase;
+
+   if (accessToken) {
+      try {
+         client = createSupabaseServerClient(accessToken);
+      } catch {
+         client = supabase;
+      }
+   }
+
+   if (!client) {
       throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
-   const { data, error } = await supabase
+   const { data, error } = await client
       .from("loan_applications")
       .select(`
          id,
@@ -45,16 +73,70 @@ export async function fetchMemberLoanApplications(memberId) {
       throw new Error(error.message);
    }
 
-   return (data || []).map((application) => {
+   const applications = await Promise.all((data || []).map(async (application) => {
       const productRelation = Array.isArray(application.loan_products)
          ? application.loan_products[0]
          : application.loan_products;
 
+      let nextInstallment = null;
+
+      if (application.status === "APPROVED") {
+         const { data: loanData, error: loanError } = await client
+            .from("loans")
+            .select("id")
+            .eq("application_id", application.id)
+            .maybeSingle();
+
+         if (!loanError && loanData?.id) {
+            const { data: installments, error: installmentError } = await client
+               .from("loan_installments")
+               .select("id, installment_number, due_date, amount_due, status")
+               .eq("loan_id", loanData.id)
+               .order("installment_number", { ascending: true });
+
+            if (!installmentError) {
+               const pendingInstallment = (installments || []).find((item) => item.status === "PENDING") || (installments || [])[0] || null;
+
+               if (pendingInstallment) {
+                  let latestPaymentStatus = null;
+
+                  const { data: latestPayment, error: latestPaymentError } = await client
+                     .from("installment_payments")
+                     .select("status, created_at")
+                     .eq("installment_id", pendingInstallment.id)
+                     .order("created_at", { ascending: false })
+                     .limit(1)
+                     .maybeSingle();
+
+                  if (!latestPaymentError && latestPayment?.status) {
+                     latestPaymentStatus = latestPayment.status;
+                  }
+
+                  const isPaymentLocked = latestPaymentStatus === "PENDING" || latestPaymentStatus === "APPROVED";
+
+                  nextInstallment = {
+                     id: pendingInstallment.id,
+                     installment_number: pendingInstallment.installment_number,
+                     due_date: pendingInstallment.due_date,
+                     amount_due: pendingInstallment.amount_due,
+                     label: `Cicilan ${pendingInstallment.installment_number}`,
+                     formatted_date: formatInstallmentDate(pendingInstallment.due_date),
+                     latest_payment_status: latestPaymentStatus,
+                     is_payment_locked: isPaymentLocked,
+                  };
+               }
+            }
+         }
+      }
+
       return {
          ...application,
          loan_product_name: productRelation?.name || application.loan_product_name || "Pinjaman",
+         next_installment: nextInstallment,
       };
-   });
+   }));
+
+   return applications;
 }
 
 export async function createLoanApplication({ memberId, loanProductId, amount, tenor, purpose }) {
