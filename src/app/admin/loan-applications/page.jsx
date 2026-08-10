@@ -61,8 +61,56 @@ export default function Page() {
   async function handleReview(applicationId, status) {
     const note = noteDrafts[applicationId] || "";
 
-    if (status === "REJECTED" && !note.trim()) {
-      setMessage("Catatan penolakan wajib diisi.");
+    if (status === "REJECTED") {
+      const reason = window.prompt("Masukkan catatan penolakan untuk pengajuan ini:", note || "")?.trim() || "";
+
+      if (!reason) {
+        setMessage("Catatan penolakan wajib diisi sebelum pengajuan ditolak.");
+        return;
+      }
+
+      setNoteDrafts((current) => ({ ...current, [applicationId]: reason }));
+      const confirmed = window.confirm("Yakin ingin menolak pengajuan pinjaman ini?");
+      if (!confirmed) {
+        return;
+      }
+
+      const finalNote = reason;
+      try {
+        setProcessingId(applicationId);
+        const response = await fetch(`/api/admin/loan-applications/${applicationId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status, admin_note: finalNote }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Gagal memperbarui status pengajuan.");
+        }
+
+        const updatedApplication = result?.application || null;
+
+        if (updatedApplication) {
+          setApplications((current) =>
+            current.map((application) => (application.id === applicationId ? updatedApplication : application))
+          );
+        } else {
+          setApplications((current) =>
+            current.map((application) =>
+              application.id === applicationId
+                ? { ...application, status, admin_note: finalNote, reviewed_at: new Date().toISOString() }
+                : application
+            )
+          );
+        }
+        setMessage("");
+        setNoteDrafts((current) => ({ ...current, [applicationId]: "" }));
+      } catch (error) {
+        setMessage(error?.message || "Gagal memperbarui status pengajuan.");
+      } finally {
+        setProcessingId(null);
+      }
       return;
     }
 
@@ -79,9 +127,21 @@ export default function Page() {
         throw new Error(result.error || "Gagal memperbarui status pengajuan.");
       }
 
-      setApplications((current) =>
-        current.map((application) => (application.id === applicationId ? result.application : application))
-      );
+      const updatedApplication = result?.application || null;
+
+      if (updatedApplication) {
+        setApplications((current) =>
+          current.map((application) => (application.id === applicationId ? updatedApplication : application))
+        );
+      } else {
+        setApplications((current) =>
+          current.map((application) =>
+            application.id === applicationId
+              ? { ...application, status, admin_note: note, reviewed_at: new Date().toISOString() }
+              : application
+          )
+        );
+      }
       setMessage("");
       setNoteDrafts((current) => ({ ...current, [applicationId]: "" }));
     } catch (error) {
