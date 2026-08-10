@@ -1,11 +1,11 @@
-import { supabaseAdmin } from "@/src/lib/supabase/client";
+import { supabase } from "@/src/lib/supabase/client";
 
 export async function fetchActiveLoanProductsForMembers() {
-   if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.");
+   if (!supabase) {
+      throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
-   const { data, error } = await supabaseAdmin
+   const { data, error } = await supabase
       .from("loan_products")
       .select("id, name, max_amount, interest_rate, max_tenor")
       .eq("is_active", true)
@@ -19,11 +19,11 @@ export async function fetchActiveLoanProductsForMembers() {
 }
 
 export async function fetchMemberLoanApplications(memberId) {
-   if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.");
+   if (!supabase) {
+      throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
-   const { data, error } = await supabaseAdmin
+   const { data, error } = await supabase
       .from("loan_applications")
       .select(`
          id,
@@ -57,122 +57,9 @@ export async function fetchMemberLoanApplications(memberId) {
    });
 }
 
-export async function fetchAllLoanApplications() {
-   if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.");
-   }
-
-   const { data, error } = await supabaseAdmin
-      .from("loan_applications")
-      .select(`
-         id,
-         amount,
-         tenor,
-         purpose,
-         status,
-         admin_note,
-         reviewed_at,
-         created_at,
-         member_id,
-         loan_product_id,
-         member:profiles!loan_applications_member_id_fkey (
-            id,
-            full_name,
-            member_number,
-            email
-         ),
-         loan_products!loan_applications_loan_product_id_fkey (
-            id,
-            name
-         )
-      `)
-      .order("created_at", { ascending: false });
-
-   if (error) {
-      throw new Error(error.message);
-   }
-
-   return (data || []).map((application) => {
-      const productRelation = Array.isArray(application.loan_products)
-         ? application.loan_products[0]
-         : application.loan_products;
-
-      return {
-         ...application,
-         loan_product_name: productRelation?.name || "Pinjaman",
-         member_name: application.member?.full_name || "Anggota",
-      };
-   });
-}
-
-export async function updateLoanApplicationStatusById(applicationId, status, adminNote = null, reviewedBy = null) {
-   if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.");
-   }
-
-   const { data: currentApplication, error: fetchError } = await supabaseAdmin
-      .from("loan_applications")
-      .select("id, status")
-      .eq("id", applicationId)
-      .single();
-
-   if (fetchError) {
-      throw new Error(fetchError.message);
-   }
-
-   if (currentApplication.status !== "PENDING") {
-      throw new Error("Pengajuan hanya bisa diubah saat status pending.");
-   }
-
-   const updates = {
-      status,
-      admin_note: status === "REJECTED" ? adminNote : currentApplication.admin_note,
-      reviewed_at: status === "APPROVED" || status === "REJECTED" ? new Date().toISOString() : null,
-      reviewed_by: status === "APPROVED" || status === "REJECTED" ? reviewedBy || null : null,
-   };
-
-   const { data, error } = await supabaseAdmin
-      .from("loan_applications")
-      .update(updates)
-      .eq("id", applicationId)
-      .select(`
-         id,
-         amount,
-         tenor,
-         purpose,
-         status,
-         admin_note,
-         reviewed_at,
-         created_at,
-         member_id,
-         loan_product_id,
-         member:profiles!loan_applications_member_id_fkey (
-            id,
-            full_name,
-            member_number,
-            email
-         ),
-         loan_products!loan_applications_loan_product_id_fkey (
-            id,
-            name
-         )
-      `)
-      .single();
-
-   if (error) {
-      throw new Error(error.message);
-   }
-
-   return {
-      ...data,
-      loan_product_name: data.loan_products?.name || "Pinjaman",
-      member_name: data.member?.full_name || "Anggota",
-   };
-}
-
 export async function createLoanApplication({ memberId, loanProductId, amount, tenor, purpose }) {
-   if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.");
+   if (!supabase) {
+      throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
    if (!memberId) {
@@ -190,7 +77,7 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
       throw new Error("Tenor pinjaman harus lebih besar dari 0.");
    }
 
-   const { data: product, error: productError } = await supabaseAdmin
+   const { data: product, error: productError } = await supabase
       .from("loan_products")
       .select("id, name, max_amount, max_tenor, is_active")
       .eq("id", loanProductId)
@@ -213,7 +100,7 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
       throw new Error("Tenor pinjaman melebihi batas maksimal produk.");
    }
 
-   const { data, error } = await supabaseAdmin
+   const { data, error } = await supabase
       .from("loan_applications")
       .insert([
          {

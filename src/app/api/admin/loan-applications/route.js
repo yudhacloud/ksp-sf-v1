@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertAdminRequest } from "@/src/lib/auth/server";
-import { fetchAllLoanApplications } from "@/src/services/loan-applications-user";
+import { fetchAllLoanApplications } from "@/src/services/loan-applications-admin";
 
 export async function GET(request) {
    const authGuardError = assertAdminRequest(request);

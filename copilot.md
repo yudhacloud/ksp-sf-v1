@@ -52,9 +52,10 @@ Buat Copilot menulis kode yang konsisten dengan struktur dan gaya proyek Next.js
 ## Penanganan data dan fungsi
 - Simpan logika data di `services`, bukan langsung di komponen halaman bila memungkinkan.
 - Untuk data anggota dan resource admin, gunakan service di `src/services/`.
-- Pisahkan logika service berdasarkan pengguna: service untuk admin dan service untuk user harus dibuat secara terpisah dan tidak saling bergantung secara langsung.
+- Pisahkan logika service berdasarkan peran: service untuk admin dan service untuk user harus dibuat secara terpisah dan tidak saling bergantung secara langsung.
 - Untuk service user, gunakan pola penamaan yang jelas, misalnya `*-user.js` atau letakkan di area khusus seperti `src/services/user/` bila perlu.
 - Untuk service admin, gunakan pola penamaan yang jelas, misalnya `members.js`, `loan-products.js`, `saving-products.js`, atau letakkan di area khusus seperti `src/services/admin/` bila perlu.
+- Hindari membuat service gabungan yang menangani logika admin dan user sekaligus. Jika ada fitur yang menyentuh dua peran, pisahkan menjadi dua service dan panggil dari route yang sesuai.
 - Jika perlu endpoint khusus, letakkan API route di `src/app/api/...`.
 - Komponen halaman harus tetap tipis: fokus pada layout, statistik, dan pemanggilan komponen.
 - Gunakan server-side fetch (`page.jsx` async) untuk memuat data awal dari API route.
@@ -62,9 +63,19 @@ Buat Copilot menulis kode yang konsisten dengan struktur dan gaya proyek Next.js
 - Hindari membuat request tambahan setiap kali filter berubah; cukup fetch sekali di awal.
 - Gunakan nama fungsi yang menjelaskan tindakan, misal `fetchMembers`, `getMemberStats`, `handleSearch`.
 
+## Arsitektur Supabase dan service
+- Semua akses database harus melalui service, bukan langsung dari halaman atau komponen.
+- File Supabase harus disimpan di `src/lib/supabase/` dan menjadi satu sumber client yang konsisten.
+- Service user harus memakai client pengguna (`supabase`) dari `src/lib/supabase/client.js` untuk akses umum.
+- Service admin harus memakai client admin (`supabaseAdmin`) dari `src/lib/supabase/client.js`.
+- Jika service user perlu bertindak atas nama pengguna tertentu di server, gunakan `createSupabaseServerClient` dari `src/lib/supabase/server-client.js` dan kirim access token pengguna.
+- Jangan membuat instansi Supabase langsung di halaman, komponen, atau route yang tidak perlu.
+- Jangan menaruh logika client admin di service user, atau sebaliknya.
+
 ## Data flow rekomendasi
 - `src/services/` berisi fungsi data-level seperti `fetchMembers()`.
-- `src/app/api/admin/...` berisi route server-side yang memanggil service.
+- `src/app/api/admin/...` berisi route server-side yang memanggil service admin.
+- `src/app/api/...` untuk user route harus memanggil service user.
 - `src/app/admin/.../page.jsx` adalah server component yang fetch data awal via API route.
 - `src/components/admin/...` berisi client component interaktif untuk filter/search.
 - Client component menggunakan `useState` + `useMemo` untuk memproses data yang sudah dimuat.

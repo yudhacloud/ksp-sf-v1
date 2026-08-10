@@ -37,11 +37,13 @@ export default function Page() {
     loadLoans();
   }, []);
 
+  const activeLoans = useMemo(() => loans.filter((loan) => loan.status === "ACTIVE"), [loans]);
+
   const stats = useMemo(() => ({
-    active: loans.filter((loan) => loan.status === "ACTIVE").length,
-    totalPrincipal: loans.reduce((sum, loan) => sum + Number(loan.principal || 0), 0),
-    remainingBalance: loans.reduce((sum, loan) => sum + Number(loan.remaining || 0), 0),
-  }), [loans]);
+    active: activeLoans.length,
+    totalPrincipal: activeLoans.reduce((sum, loan) => sum + Number(loan.principal || 0), 0),
+    remainingBalance: activeLoans.reduce((sum, loan) => sum + Number(loan.remaining || 0), 0),
+  }), [activeLoans]);
 
   return (
     <section className="container py-3 admin-page">
@@ -86,12 +88,12 @@ export default function Page() {
                 </tr>
               </thead>
               <tbody>
-                {loans.length === 0 ? (
+                {activeLoans.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="text-center py-4 text-muted">Belum ada data pinjaman.</td>
                   </tr>
                 ) : (
-                  loans.map((loan) => (
+                  activeLoans.map((loan) => (
                     <tr key={loan.id}>
                       <td>{loan.member_name}</td>
                       <td>{loan.product_name}</td>

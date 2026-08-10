@@ -28,6 +28,7 @@ export async function fetchAdminLoans() {
         )
       )
     `)
+      .eq("status", "ACTIVE")
       .order("created_at", { ascending: false });
 
    if (error) {

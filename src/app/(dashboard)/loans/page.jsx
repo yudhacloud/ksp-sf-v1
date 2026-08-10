@@ -50,7 +50,9 @@ export default function Page() {
 
   const activeLoans = loans.filter((loan) => loan.status === "APPROVED").length;
   const pendingApplications = loans.filter((loan) => loan.status === "PENDING").length;
-  const totalAmount = loans.reduce((sum, loan) => sum + Number(loan.amount || 0), 0);
+  const totalAmount = loans
+    .filter((loan) => loan.status === "APPROVED")
+    .reduce((sum, loan) => sum + Number(loan.amount || 0), 0);
 
   return (
     <section className="container py-3 admin-page">
@@ -78,7 +80,7 @@ export default function Page() {
         <article className="admin-card">
           <p className="admin-stat-title">Total Pinjaman</p>
           <div className="admin-stat-value">{formatCurrency(totalAmount)}</div>
-          <p>Jumlah nominal pinjaman yang pernah diajukan.</p>
+          <p>Jumlah nominal pinjaman yang sudah disetujui.</p>
         </article>
       </div>
 
