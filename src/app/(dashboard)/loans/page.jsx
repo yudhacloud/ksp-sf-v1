@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("id-ID", {
@@ -56,13 +57,14 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [submittingInstallmentId, setSubmittingInstallmentId] = useState(null);
-  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [paymentNote, setPaymentNote] = useState("");
   const [proofFile, setProofFile] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
+  const selectedLoan = loans.find((loan) => loan.id === selectedLoanId) || loans[0] || null;
   const selectedInstallment = selectedLoan?.next_installment || null;
 
   const loadLoans = useCallback(async () => {
@@ -74,7 +76,11 @@ export default function Page() {
         throw new Error(result.error || "Gagal memuat data pinjaman.");
       }
 
-      setLoans(result.applications || []);
+      const applications = result.applications || [];
+      setLoans(applications);
+      if (applications.length > 0 && !selectedLoanId) {
+        setSelectedLoanId(applications[0].id);
+      }
     } catch (error) {
       if (error?.message === "Unauthorized.") {
         setMessage("Silakan login kembali untuk melihat data pinjaman Anda.");
@@ -103,20 +109,20 @@ export default function Page() {
     [loans],
   );
 
-  function handleOpenPaymentModal(loan) {
-    if (!loan?.next_installment?.id) {
-      setMessage("Tidak ada cicilan yang bisa dibayar saat ini.");
+  function handleOpenPaymentModal(loan, installment) {
+    if (!installment?.id) {
+      toastWarning("Tidak ada cicilan yang bisa dibayar saat ini.");
       return;
     }
 
-    if (loan.next_installment?.is_payment_locked) {
-      const statusText = formatPaymentStatus(loan.next_installment?.latest_payment_status);
-      setMessage(statusText || "Pembayaran cicilan ini tidak bisa diajukan sekarang.");
+    if (installment?.is_payment_locked) {
+      const statusText = formatPaymentStatus(installment?.latest_payment_status);
+      toastWarning(statusText || "Pembayaran cicilan ini tidak bisa diajukan sekarang.");
       return;
     }
 
     setMessage("");
-    setSelectedLoan(loan);
+    setSelectedLoanId(loan.id);
     setPaymentDate(new Date().toISOString().slice(0, 10));
     setPaymentNote("");
     setProofFile(null);
@@ -129,7 +135,7 @@ export default function Page() {
     }
 
     setShowPaymentModal(false);
-    setSelectedLoan(null);
+    setSelectedLoanId(selectedLoanId);
     setProofFile(null);
   }
 
@@ -137,12 +143,12 @@ export default function Page() {
     event.preventDefault();
 
     if (!selectedInstallment?.id) {
-      setMessage("Data cicilan tidak tersedia.");
+      toastWarning("Data cicilan tidak tersedia.");
       return;
     }
 
     if (!proofFile) {
-      setMessage("Lampirkan bukti pembayaran terlebih dahulu.");
+      toastWarning("Lampirkan bukti pembayaran terlebih dahulu.");
       return;
     }
 
@@ -186,13 +192,12 @@ export default function Page() {
         throw new Error(result.error || "Gagal mengirim pembayaran cicilan.");
       }
 
-      setMessage("Pembayaran cicilan berhasil dikirim dan menunggu verifikasi admin.");
+      toastSuccess("Pembayaran cicilan berhasil dikirim dan menunggu verifikasi admin.");
       setShowPaymentModal(false);
-      setSelectedLoan(null);
       setProofFile(null);
       await loadLoans();
     } catch (error) {
-      setMessage(error?.message || "Gagal mengirim pembayaran cicilan.");
+      toastError(error?.message || "Gagal mengirim pembayaran cicilan.");
     } finally {
       setSubmittingInstallmentId(null);
       setSubmittingPayment(false);
@@ -230,7 +235,7 @@ export default function Page() {
       </div>
 
       <div className="admin-card">
-        <h3>Daftar Pinjaman</h3>
+        <h3>Daftar Produk Pinjaman</h3>
         {loading ? (
           <div className="py-4 text-center text-muted">Memuat data pinjaman...</div>
         ) : message && loans.length === 0 ? (
@@ -240,85 +245,143 @@ export default function Page() {
             Belum ada data pinjaman. Silakan ajukan pinjaman terlebih dahulu.
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Produk</th>
-                  <th>Nominal</th>
-                  <th>Tenor</th>
-                  <th>Status</th>
-                  <th>Cicilan Berikutnya</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loans.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4 text-muted">
-                      Belum ada data pinjaman.
-                    </td>
-                  </tr>
-                ) : (
-                  loans.map((loan) => (
-                    <tr key={loan.id}>
-                      <td>{loan.loan_product_name || loan.loan_products?.name || "Pinjaman"}</td>
-                      <td>{formatCurrency(loan.amount)}</td>
-                      <td>{loan.tenor} bulan</td>
-                      <td>
-                        <span className={`admin-status-badge ${loan.status === "APPROVED" ? "approved" : "pending"}`}>
-                          {formatStatus(loan.status)}
-                        </span>
-                      </td>
-                      <td>
-                        {loan.status === "APPROVED" && loan.next_installment ? (
-                          <div>
-                            <div className="fw-semibold">{loan.next_installment.label}</div>
-                            <div className="text-muted small">
-                              {formatDate(loan.next_installment.due_date)}
-                            </div>
-                          </div>
-                        ) : loan.status === "APPROVED" ? (
-                          "Belum ada jadwal"
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td>
-                        {loan.status === "APPROVED" ? (
-                          <div className="d-flex flex-column gap-2">
-                            <div className="small text-muted">
-                              {loan.next_installment?.amount_due ? formatCurrency(loan.next_installment.amount_due) : "-"}
-                            </div>
+          <div className="row g-3">
+            {loans.map((loan) => (
+              <div className="col-12 col-lg-6" key={loan.id}>
+                <div
+                  className={`border rounded-4 p-3 h-100 cursor-pointer ${selectedLoan?.id === loan.id ? "border-primary bg-light" : "bg-white"}`}
+                  onClick={() => setSelectedLoanId(loan.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedLoanId(loan.id);
+                    }
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                      <div className="small text-muted">Produk</div>
+                      <div className="fw-bold fs-5">{loan.loan_product_name || "Pinjaman"}</div>
+                    </div>
+                    <span className={`admin-status-badge ${loan.status === "APPROVED" ? "approved" : loan.status === "REJECTED" ? "rejected" : "pending"}`}>
+                      {formatStatus(loan.status)}
+                    </span>
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-6">
+                      <div className="small text-muted">Nominal</div>
+                      <div className="fw-semibold">{formatCurrency(loan.amount)}</div>
+                    </div>
+                    <div className="col-6">
+                      <div className="small text-muted">Tenor</div>
+                      <div className="fw-semibold">{loan.tenor} bulan</div>
+                    </div>
+                  </div>
+
+                  <div className="small text-muted">
+                    {loan.status === "APPROVED"
+                      ? `Cicilan: ${loan.next_installment ? loan.next_installment.label : "-"}`
+                      : loan.status === "REJECTED"
+                        ? "Pengajuan pinjaman ditolak"
+                        : "Menunggu persetujuan"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {selectedLoan && (
+          <div className="mt-4 border rounded-4 p-4 bg-light-subtle">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <div>
+                <div className="small text-muted">Detail Pinjaman</div>
+                <h4 className="mb-0">{selectedLoan.loan_product_name || "Pinjaman"}</h4>
+              </div>
+              <span className={`admin-status-badge ${selectedLoan.status === "APPROVED" ? "approved" : selectedLoan.status === "REJECTED" ? "rejected" : "pending"}`}>
+                {formatStatus(selectedLoan.status)}
+              </span>
+            </div>
+
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-md-4">
+                <div className="small text-muted">Jumlah Pinjaman</div>
+                <div className="fw-bold fs-5">{formatCurrency(selectedLoan.amount)}</div>
+              </div>
+              <div className="col-12 col-md-4">
+                <div className="small text-muted">Jumlah Sudah Dibayar</div>
+                <div className="fw-bold fs-5 text-success">
+                  {formatCurrency(selectedLoan.loan_detail?.total_paid || 0)}
+                </div>
+              </div>
+              <div className="col-12 col-md-4">
+                <div className="small text-muted">Sisa Pinjaman</div>
+                <div className="fw-bold fs-5">
+                  {formatCurrency(Math.max(Number(selectedLoan.amount || 0) - Number(selectedLoan.loan_detail?.total_paid || 0), 0))}
+                </div>
+              </div>
+            </div>
+
+            {selectedLoan.status === "APPROVED" && selectedLoan.loan_detail?.active_installments?.length ? (
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Cicilan</th>
+                      <th>Jatuh Tempo</th>
+                      <th>Nominal</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedLoan.loan_detail.active_installments.map((installment) => (
+                      <tr key={installment.id}>
+                        <td>{`Cicilan ${installment.installment_number}`}</td>
+                        <td>{formatDate(installment.due_date)}</td>
+                        <td>{formatCurrency(installment.amount_due)}</td>
+                        <td>
+                          <span className={`admin-status-badge ${installment.status === "PAID" ? "approved" : installment.status === "PENDING" ? "pending" : ""}`}>
+                            {installment.status === "PAID" ? "Lunas" : installment.status === "PENDING" ? "Belum Lunas" : installment.status}
+                          </span>
+                        </td>
+                        <td>
+                          {installment.status === "PENDING" ? (
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-primary"
-                              disabled={!loan.next_installment?.id || loan.next_installment?.is_payment_locked || submittingInstallmentId === loan.next_installment.id}
-                              onClick={() => handleOpenPaymentModal(loan)}
+                              disabled={installment.is_payment_locked || submittingInstallmentId === installment.id}
+                              onClick={() => handleOpenPaymentModal(selectedLoan, installment)}
                             >
-                              {submittingInstallmentId === loan.next_installment.id
+                              {submittingInstallmentId === installment.id
                                 ? "Mengirim..."
-                                : loan.next_installment?.is_payment_locked
+                                : installment.is_payment_locked
                                   ? "Sudah Diajukan"
                                   : "Bayar Cicilan"}
                             </button>
-                            {loan.next_installment?.is_payment_locked ? (
-                              <div className="small text-muted">
-                                {formatPaymentStatus(loan.next_installment?.latest_payment_status)}
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                          ) : (
+                            <span className="text-muted small">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : selectedLoan.status === "APPROVED" ? (
+              <div className="text-muted py-3">Belum ada data cicilan untuk pinjaman ini.</div>
+            ) : selectedLoan.status === "REJECTED" ? (
+              <div className="text-muted py-3">Pengajuan pinjaman ditolak oleh admin.</div>
+            ) : (
+              <div className="text-muted py-3">Pinjaman masih menunggu persetujuan admin.</div>
+            )}
           </div>
         )}
+
         {message && (
           <div className="alert alert-danger mt-3" role="alert">
             {message}

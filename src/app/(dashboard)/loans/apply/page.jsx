@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 function formatCurrency(value) {
    return new Intl.NumberFormat("id-ID", {
@@ -16,12 +17,14 @@ export default function LoanApplyPage() {
    const router = useRouter();
    const [products, setProducts] = useState([]);
    const [selectedProductId, setSelectedProductId] = useState("");
-   const [amount, setAmount] = useState("");
-   const [tenor, setTenor] = useState("");
    const [purpose, setPurpose] = useState("");
    const [loading, setLoading] = useState(true);
    const [submitting, setSubmitting] = useState(false);
    const [message, setMessage] = useState("");
+
+   const selectedProduct = products.find((product) => product.id === selectedProductId) || null;
+   const autoAmount = selectedProduct ? Number(selectedProduct.max_amount) : 0;
+   const autoTenor = selectedProduct ? Number(selectedProduct.max_tenor) : 0;
 
    useEffect(() => {
       async function loadProducts() {
@@ -52,6 +55,10 @@ export default function LoanApplyPage() {
       setMessage("");
 
       try {
+         if (!selectedProduct) {
+            throw new Error("Pilih produk pinjaman terlebih dahulu.");
+         }
+
          const response = await fetch("/api/loans/apply", {
             method: "POST",
             headers: {
@@ -59,8 +66,8 @@ export default function LoanApplyPage() {
             },
             body: JSON.stringify({
                loanProductId: selectedProductId,
-               amount: Number(amount),
-               tenor: Number(tenor),
+               amount: autoAmount,
+               tenor: autoTenor,
                purpose,
             }),
          });
@@ -70,9 +77,10 @@ export default function LoanApplyPage() {
             throw new Error(result.error || "Gagal mengajukan pinjaman.");
          }
 
+         toastSuccess("Pengajuan pinjaman berhasil dikirim.");
          router.push("/loans");
       } catch (error) {
-         setMessage(error?.message || "Gagal mengajukan pinjaman.");
+         toastError(error?.message || "Gagal mengajukan pinjaman.");
       } finally {
          setSubmitting(false);
       }
@@ -82,7 +90,7 @@ export default function LoanApplyPage() {
       <section className="container py-3 admin-page">
          <PageHeader
             title="Ajukan Pinjaman"
-            subtitle="Pilih produk pinjaman, tentukan nominal, tenor, dan tujuan pinjaman Anda."
+            subtitle="Pilih produk pinjaman, lalu nominal dan tenor akan diisi otomatis berdasarkan produk yang dipilih."
          />
 
          <div className="admin-card">
@@ -112,12 +120,10 @@ export default function LoanApplyPage() {
                         <label className="form-label" htmlFor="amount">Nominal Pinjaman</label>
                         <input
                            id="amount"
-                           type="number"
-                           min="1"
+                           type="text"
                            className="form-control"
-                           value={amount}
-                           onChange={(event) => setAmount(event.target.value)}
-                           required
+                           value={selectedProduct ? formatCurrency(autoAmount) : ""}
+                           readOnly
                         />
                      </div>
 
@@ -125,12 +131,10 @@ export default function LoanApplyPage() {
                         <label className="form-label" htmlFor="tenor">Tenor (bulan)</label>
                         <input
                            id="tenor"
-                           type="number"
-                           min="1"
+                           type="text"
                            className="form-control"
-                           value={tenor}
-                           onChange={(event) => setTenor(event.target.value)}
-                           required
+                           value={selectedProduct ? `${autoTenor} bulan` : ""}
+                           readOnly
                         />
                      </div>
 

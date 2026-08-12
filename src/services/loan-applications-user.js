@@ -78,12 +78,13 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
          ? application.loan_products[0]
          : application.loan_products;
 
+      let loanDetail = null;
       let nextInstallment = null;
 
       if (application.status === "APPROVED") {
          const { data: loanData, error: loanError } = await client
             .from("loans")
-            .select("id")
+            .select("id, principal_amount, remaining_balance, monthly_installment, start_date, end_date, status")
             .eq("application_id", application.id)
             .maybeSingle();
 
@@ -94,44 +95,85 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
                .eq("loan_id", loanData.id)
                .order("installment_number", { ascending: true });
 
-            if (!installmentError) {
-               const pendingInstallment = (installments || []).find((item) => item.status === "PENDING") || (installments || [])[0] || null;
+            const installmentIds = (installments || []).map((item) => item.id).filter(Boolean);
+            let paymentRows = [];
 
-               if (pendingInstallment) {
-                  let latestPaymentStatus = null;
+            if (installmentIds.length > 0) {
+               const { data: fetchedPayments, error: paymentError } = await client
+                  .from("installment_payments")
+                  .select("id, installment_id, amount, status, payment_date")
+                  .in("installment_id", installmentIds)
+                  .order("created_at", { ascending: false });
 
-                  const { data: latestPayment, error: latestPaymentError } = await client
-                     .from("installment_payments")
-                     .select("status, created_at")
-                     .eq("installment_id", pendingInstallment.id)
-                     .order("created_at", { ascending: false })
-                     .limit(1)
-                     .maybeSingle();
-
-                  if (!latestPaymentError && latestPayment?.status) {
-                     latestPaymentStatus = latestPayment.status;
-                  }
-
-                  const isPaymentLocked = latestPaymentStatus === "PENDING" || latestPaymentStatus === "APPROVED";
-
-                  nextInstallment = {
-                     id: pendingInstallment.id,
-                     installment_number: pendingInstallment.installment_number,
-                     due_date: pendingInstallment.due_date,
-                     amount_due: pendingInstallment.amount_due,
-                     label: `Cicilan ${pendingInstallment.installment_number}`,
-                     formatted_date: formatInstallmentDate(pendingInstallment.due_date),
-                     latest_payment_status: latestPaymentStatus,
-                     is_payment_locked: isPaymentLocked,
-                  };
+               if (!paymentError) {
+                  paymentRows = fetchedPayments || [];
                }
             }
+
+            const latestPaymentsByInstallment = new Map();
+            paymentRows.forEach((payment) => {
+               if (!payment?.installment_id || latestPaymentsByInstallment.has(payment.installment_id)) {
+                  return;
+               }
+
+               latestPaymentsByInstallment.set(payment.installment_id, payment);
+            });
+
+            const installmentList = (installments || []).map((installment) => {
+               const latestPayment = latestPaymentsByInstallment.get(installment.id) || null;
+               const paymentStatus = latestPayment?.status || null;
+               const isPaymentLocked = paymentStatus === "PENDING" || paymentStatus === "APPROVED";
+
+               return {
+                  id: installment.id,
+                  installment_number: installment.installment_number,
+                  due_date: installment.due_date,
+                  amount_due: Number(installment.amount_due || 0),
+                  status: installment.status || "PENDING",
+                  latest_payment_status: paymentStatus,
+                  is_payment_locked: isPaymentLocked,
+                  latest_payment_amount: Number(latestPayment?.amount || 0),
+                  payment_date: latestPayment?.payment_date || null,
+               };
+            });
+
+            const amountPaid = installmentList
+               .filter((installment) => installment.latest_payment_status === "APPROVED")
+               .reduce((sum, installment) => sum + Number(installment.latest_payment_amount || 0), 0);
+
+            const pendingInstallment = (installmentList || []).find((item) => item.status === "PENDING") || (installmentList || [])[0] || null;
+
+            if (pendingInstallment) {
+               nextInstallment = {
+                  id: pendingInstallment.id,
+                  installment_number: pendingInstallment.installment_number,
+                  due_date: pendingInstallment.due_date,
+                  amount_due: pendingInstallment.amount_due,
+                  label: `Cicilan ${pendingInstallment.installment_number}`,
+                  formatted_date: formatInstallmentDate(pendingInstallment.due_date),
+                  latest_payment_status: pendingInstallment.latest_payment_status,
+                  is_payment_locked: pendingInstallment.is_payment_locked,
+               };
+            }
+
+            loanDetail = {
+               id: loanData.id,
+               principal_amount: Number(loanData.principal_amount || 0),
+               remaining_balance: Number(loanData.remaining_balance || 0),
+               monthly_installment: Number(loanData.monthly_installment || 0),
+               start_date: loanData.start_date,
+               end_date: loanData.end_date,
+               status: loanData.status || "ACTIVE",
+               active_installments: installmentList,
+               total_paid: amountPaid,
+            };
          }
       }
 
       return {
          ...application,
          loan_product_name: productRelation?.name || application.loan_product_name || "Pinjaman",
+         loan_detail: loanDetail,
          next_installment: nextInstallment,
       };
    }));
@@ -146,17 +188,6 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
 
    if (!memberId) {
       throw new Error("Member ID tidak tersedia.");
-   }
-
-   const parsedAmount = Number(amount);
-   const parsedTenor = Number(tenor);
-
-   if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      throw new Error("Nominal pinjaman harus lebih besar dari 0.");
-   }
-
-   if (!Number.isFinite(parsedTenor) || parsedTenor <= 0) {
-      throw new Error("Tenor pinjaman harus lebih besar dari 0.");
    }
 
    const { data: product, error: productError } = await supabase
@@ -174,11 +205,24 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
       throw new Error("Produk pinjaman tidak ditemukan atau tidak aktif.");
    }
 
-   if (parsedAmount > Number(product.max_amount)) {
+   const parsedAmount = Number(amount);
+   const parsedTenor = Number(tenor);
+   const finalAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : Number(product.max_amount);
+   const finalTenor = Number.isFinite(parsedTenor) && parsedTenor > 0 ? parsedTenor : Number(product.max_tenor);
+
+   if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
+      throw new Error("Nominal pinjaman harus lebih besar dari 0.");
+   }
+
+   if (!Number.isFinite(finalTenor) || finalTenor <= 0) {
+      throw new Error("Tenor pinjaman harus lebih besar dari 0.");
+   }
+
+   if (finalAmount > Number(product.max_amount)) {
       throw new Error("Nominal pinjaman melebihi batas maksimal produk.");
    }
 
-   if (parsedTenor > Number(product.max_tenor)) {
+   if (finalTenor > Number(product.max_tenor)) {
       throw new Error("Tenor pinjaman melebihi batas maksimal produk.");
    }
 
@@ -188,8 +232,8 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
          {
             member_id: memberId,
             loan_product_id: loanProductId,
-            amount: parsedAmount,
-            tenor: parsedTenor,
+            amount: finalAmount,
+            tenor: finalTenor,
             purpose: typeof purpose === "string" ? purpose.trim() : "",
             status: "PENDING",
          },

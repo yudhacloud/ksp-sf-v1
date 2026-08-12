@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 async function parseResponseBody(response) {
    const text = await response.text();
@@ -107,14 +108,15 @@ export default function AdminLoanProductEditPage() {
          setSaving(false);
 
          if (!response.ok) {
-            setMessage(result.error || "Gagal memperbarui produk pinjaman.");
+            toastWarning(result.error || "Gagal memperbarui produk pinjaman.");
             return;
          }
 
+         toastSuccess("Produk pinjaman berhasil diperbarui.");
          router.push("/admin/loan-products");
       } catch (error) {
          setSaving(false);
-         setMessage(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       }
    }
 

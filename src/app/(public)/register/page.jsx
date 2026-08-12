@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 import styles from "../AuthPage.module.css";
 
 export default function RegisterPage() {
@@ -37,11 +38,11 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setMessage(result.error || "Gagal mendaftar, coba lagi.");
+      toastWarning(result.error || "Gagal mendaftar, coba lagi.");
       return;
     }
 
-    setMessage("Pendaftaran berhasil. Anda dapat masuk menggunakan akun baru Anda.");
+    toastSuccess("Pendaftaran berhasil. Anda dapat masuk menggunakan akun baru Anda.");
     setDisplayName("");
     setPhone("");
     setEmail("");

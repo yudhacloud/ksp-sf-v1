@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastWarning } from "@/src/lib/toast";
 
 function formatCurrency(value) {
    return new Intl.NumberFormat("id-ID", {
@@ -77,13 +78,14 @@ export default function LoanProductsTable({ loanProducts }) {
 
          if (!response.ok) {
             const message = result.error || "Gagal memperbarui status produk pinjaman.";
-            window.alert(message);
+            toastError(message);
             return;
          }
 
+         toastWarning(`Produk pinjaman ${product.name} berhasil diperbarui.`);
          router.refresh();
       } catch (error) {
-         window.alert(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       } finally {
          setUpdatingProductId(null);
       }

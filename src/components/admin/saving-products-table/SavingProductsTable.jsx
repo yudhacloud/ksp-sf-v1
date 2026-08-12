@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastSuccess } from "@/src/lib/toast";
 
 
 /**
@@ -74,13 +75,14 @@ export default function SavingProductsTable({ savingProducts }) {
          const result = await response.json();
 
          if (!response.ok) {
-            window.alert(result.error || "Gagal memperbarui status produk simpanan.");
+            toastError(result.error || "Gagal memperbarui status produk simpanan.");
             return;
          }
 
+         toastSuccess(`Produk simpanan ${product.name} berhasil diperbarui.`);
          router.refresh();
       } catch (error) {
-         window.alert(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       } finally {
          setUpdatingProductId(null);
       }

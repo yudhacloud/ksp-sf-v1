@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 export default function AdminMemberCreatePage() {
    const router = useRouter();
@@ -38,14 +39,15 @@ export default function AdminMemberCreatePage() {
          setLoading(false);
 
          if (!response.ok) {
-            setMessage(result.error || "Gagal menambahkan anggota.");
+            toastWarning(result.error || "Gagal menambahkan anggota.");
             return;
          }
 
+         toastSuccess("Anggota baru berhasil ditambahkan.");
          router.push("/admin/members");
       } catch (error) {
          setLoading(false);
-         setMessage(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       }
    }
 

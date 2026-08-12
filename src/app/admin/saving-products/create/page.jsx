@@ -3,6 +3,7 @@
 import PageHeader from "@/src/components/ui/PageHeader"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast"
 
 export default function AdminSavingProductCreatePage() {
    const router = useRouter()
@@ -36,14 +37,15 @@ export default function AdminSavingProductCreatePage() {
          setLoading(false)
 
          if (!response.ok) {
-            setMessage(result.error || "Gagal menambah produk simpanan")
+            toastWarning(result.error || "Gagal menambah produk simpanan")
             return
          }
 
+         toastSuccess("Produk simpanan berhasil dibuat.")
          router.push("/admin/saving-products")
       } catch (error) {
          setLoading(false);
-         setMessage(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       }
 
    }

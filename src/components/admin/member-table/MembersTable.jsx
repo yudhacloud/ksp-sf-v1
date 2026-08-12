@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastSuccess } from "@/src/lib/toast";
 
 /**
  * Komponen client untuk menampilkan tabel anggota.
@@ -62,13 +63,14 @@ export default function MembersTable({ members }) {
          const result = await response.json();
 
          if (!response.ok) {
-            window.alert(result.error || "Gagal menghapus anggota.");
+            toastError(result.error || "Gagal menghapus anggota.");
             return;
          }
 
+         toastSuccess(`Anggota ${memberName} berhasil dihapus.`);
          router.refresh();
       } catch (error) {
-         window.alert(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       } finally {
          setDeletingMemberId(null);
       }

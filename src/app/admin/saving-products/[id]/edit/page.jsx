@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/src/components/ui/PageHeader";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 export default function AdminSavingProductEditPage() {
    const params = useParams();
@@ -86,14 +87,15 @@ export default function AdminSavingProductEditPage() {
          setSaving(false);
 
          if (!response.ok) {
-            setMessage(result.error || "Gagal memperbarui produk simpanan.");
+            toastWarning(result.error || "Gagal memperbarui produk simpanan.");
             return;
          }
 
+         toastSuccess("Produk simpanan berhasil diperbarui.");
          router.push("/admin/saving-products");
       } catch (error) {
          setSaving(false);
-         setMessage(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       }
    }
 

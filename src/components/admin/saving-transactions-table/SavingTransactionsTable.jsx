@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastWarning } from "@/src/lib/toast";
 
 function formatCurrency(value) {
    return new Intl.NumberFormat("id-ID", {
@@ -107,7 +108,7 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
 
    async function handleUpdateStatus(transaction, nextStatus, adminNote = "") {
       if (transaction.status !== "PENDING") {
-         window.alert("Aksi hanya tersedia untuk transaksi pending.");
+         toastWarning("Aksi hanya tersedia untuk transaksi pending.");
          return;
       }
 
@@ -135,13 +136,14 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
          const result = await response.json();
 
          if (!response.ok) {
-            window.alert(result.error || "Gagal memperbarui status transaksi.");
+            toastError(result.error || "Gagal memperbarui status transaksi.");
             return;
          }
 
+         toastWarning(`Transaksi ${transaction.member?.full_name || transaction.member_id} berhasil diperbarui.`);
          router.refresh();
       } catch (error) {
-         window.alert(error?.message || "Gagal menghubungi server.");
+         toastError(error?.message || "Gagal menghubungi server.");
       } finally {
          setUpdatingTransactionId(null);
       }
@@ -149,7 +151,7 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
 
    function openRejectionModal(transaction) {
       if (transaction.status !== "PENDING") {
-         window.alert("Aksi hanya tersedia untuk transaksi pending.");
+         toastWarning("Aksi hanya tersedia untuk transaksi pending.");
          return;
       }
 
@@ -171,7 +173,7 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
 
       const note = rejectionNote.trim();
       if (!note) {
-         window.alert("Alasan penolakan wajib diisi.");
+         toastWarning("Alasan penolakan wajib diisi.");
          return;
       }
 

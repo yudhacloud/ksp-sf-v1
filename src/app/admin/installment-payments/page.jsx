@@ -53,10 +53,21 @@ function getPaymentStatusClass(status) {
 }
 
 function getMemberStatusClass(member) {
+  const overdueCount = member.installments.filter((item) => {
+    if (item.status === "PAID") return false;
+    if (!item.due_date) return false;
+    const dueDate = new Date(item.due_date);
+    const today = new Date();
+    dueDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return dueDate < today;
+  }).length;
+
   const unpaidCount = member.installments.filter((item) => item.status !== "PAID").length;
+
+  if (overdueCount > 0) return "rejected";
   if (unpaidCount === 0) return "approved";
-  if (unpaidCount <= 2) return "pending";
-  return "rejected";
+  return "pending";
 }
 
 export default function Page() {
@@ -65,6 +76,7 @@ export default function Page() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [updatingPaymentId, setUpdatingPaymentId] = useState(null);
 
   const loadInstallments = useCallback(async () => {
@@ -190,6 +202,14 @@ export default function Page() {
     [filteredMembers, selectedMemberId],
   );
 
+  function openPaymentDetail(payment) {
+    setSelectedPayment(payment);
+  }
+
+  function closePaymentDetail() {
+    setSelectedPayment(null);
+  }
+
   const stats = useMemo(() => {
     const totalTagihan = installments.reduce((sum, item) => sum + Number(item.amount_due || 0), 0);
     const totalBelumDibayar = installments
@@ -216,17 +236,17 @@ export default function Page() {
       />
 
       <div className="admin-grid mb-4">
-        <article className="admin-card">
+        <article className="admin-card compact-stat-card">
           <p className="admin-stat-title">Total Tagihan</p>
           <div className="admin-stat-value">{formatCurrency(stats.totalTagihan)}</div>
           <p>Jumlah total nominal cicilan yang sedang dipantau.</p>
         </article>
-        <article className="admin-card">
+        <article className="admin-card compact-stat-card">
           <p className="admin-stat-title">Belum Dibayar</p>
           <div className="admin-stat-value">{formatCurrency(stats.totalBelumDibayar)}</div>
           <p>Nilai cicilan yang belum lunas.</p>
         </article>
-        <article className="admin-card">
+        <article className="admin-card compact-stat-card">
           <p className="admin-stat-title">Anggota Bermasalah</p>
           <div className="admin-stat-value">{stats.anggotaBermasalah}</div>
           <p>Jumlah anggota yang memiliki cicilan belum lunas.</p>
@@ -268,13 +288,29 @@ export default function Page() {
                       onClick={() => setSelectedMemberId(member.id)}
                     >
                       <div className="d-flex justify-content-between align-items-start gap-2">
-                        <div>
+                        <div className="flex-grow-1">
                           <div className="fw-semibold">{member.memberName}</div>
                           <div className="small text-muted">{member.installments.length} cicilan</div>
+                          <div className="mt-3">
+                            <span className={`admin-status-badge ${getMemberStatusClass(member)}`}>
+                              {(() => {
+                                const overdueCount = member.installments.filter((item) => {
+                                  if (item.status === "PAID") return false;
+                                  if (!item.due_date) return false;
+                                  const dueDate = new Date(item.due_date);
+                                  const today = new Date();
+                                  dueDate.setHours(0, 0, 0, 0);
+                                  today.setHours(0, 0, 0, 0);
+                                  return dueDate < today;
+                                }).length;
+
+                                if (overdueCount > 0) return `${overdueCount} terlambat`;
+                                if (unpaidCount === 0) return "Lancar";
+                                return `${unpaidCount} belum lunas`;
+                              })()}
+                            </span>
+                          </div>
                         </div>
-                        <span className={`admin-status-badge ${getMemberStatusClass(member)}`}>
-                          {unpaidCount === 0 ? "Lancar" : `${unpaidCount} belum lunas`}
-                        </span>
                       </div>
                     </button>
                   );
@@ -294,28 +330,40 @@ export default function Page() {
                     <p className="text-muted">{selectedMember.installments.length} cicilan terdaftar</p>
                   </div>
                   <span className={`admin-status-badge ${getMemberStatusClass(selectedMember)}`}>
-                    {selectedMember.installments.filter((item) => item.status !== "PAID").length === 0
-                      ? "Lancar"
-                      : `${selectedMember.installments.filter((item) => item.status !== "PAID").length} belum lunas`}
+                    {(() => {
+                      const overdueCount = selectedMember.installments.filter((item) => {
+                        if (item.status === "PAID") return false;
+                        if (!item.due_date) return false;
+                        const dueDate = new Date(item.due_date);
+                        const today = new Date();
+                        dueDate.setHours(0, 0, 0, 0);
+                        today.setHours(0, 0, 0, 0);
+                        return dueDate < today;
+                      }).length;
+
+                      if (overdueCount > 0) return `${overdueCount} terlambat`;
+                      if (selectedMember.installments.filter((item) => item.status !== "PAID").length === 0) return "Lancar";
+                      return `${selectedMember.installments.filter((item) => item.status !== "PAID").length} belum lunas`;
+                    })()}
                   </span>
                 </div>
 
                 <div className="admin-grid mb-4">
-                  <article className="admin-card">
+                  <article className="admin-card compact-stat-card">
                     <p className="admin-stat-title">Total Tagihan</p>
                     <div className="admin-stat-value">
                       {formatCurrency(selectedMember.installments.reduce((sum, item) => sum + Number(item.amount_due || 0), 0))}
                     </div>
                     <p>Keseluruhan tagihan anggota ini.</p>
                   </article>
-                  <article className="admin-card">
+                  <article className="admin-card compact-stat-card">
                     <p className="admin-stat-title">Sudah Dibayar</p>
                     <div className="admin-stat-value">
                       {formatCurrency(selectedMember.installments.filter((item) => item.status === "PAID").reduce((sum, item) => sum + Number(item.amount_due || 0), 0))}
                     </div>
                     <p>Nominal cicilan yang sudah lunas.</p>
                   </article>
-                  <article className="admin-card">
+                  <article className="admin-card compact-stat-card">
                     <p className="admin-stat-title">Sisa Belum Bayar</p>
                     <div className="admin-stat-value">
                       {formatCurrency(selectedMember.installments.filter((item) => item.status !== "PAID").reduce((sum, item) => sum + Number(item.amount_due || 0), 0))}
@@ -332,8 +380,6 @@ export default function Page() {
                         <th>Jatuh Tempo</th>
                         <th>Nominal</th>
                         <th>Status</th>
-                        <th>Pembayaran</th>
-                        <th>Bukti</th>
                         <th>Aksi</th>
                       </tr>
                     </thead>
@@ -344,59 +390,22 @@ export default function Page() {
                           <td>{formatDate(payment.due_date)}</td>
                           <td>{formatCurrency(payment.amount_due)}</td>
                           <td>
-                            <span className={`admin-status-badge ${getStatusClass(payment.status)}`}>
-                              {normalizeStatus(payment.status)}
-                            </span>
-                          </td>
-                          <td>
                             {payment.payment_id ? (
-                              <div className="d-flex flex-column gap-1">
-                                <span className={`admin-status-badge ${getPaymentStatusClass(payment.latest_payment_status)}`}>
-                                  {getPaymentStatusLabel(payment.latest_payment_status)}
-                                </span>
-                                {payment.latest_payment_date ? <span className="small text-muted">{formatDate(payment.latest_payment_date)}</span> : null}
-                                {payment.latest_payment_amount ? <span className="small text-muted">{formatCurrency(payment.latest_payment_amount)}</span> : null}
-                              </div>
+                              <span className={`admin-status-badge ${getPaymentStatusClass(payment.latest_payment_status)}`}>
+                                {getPaymentStatusLabel(payment.latest_payment_status)}
+                              </span>
                             ) : (
-                              <span className="text-muted">Belum ada</span>
+                              <span className="admin-status-badge pending">Belum ada pembayaran</span>
                             )}
                           </td>
                           <td>
-                            {payment.latest_payment_proof_url ? (
-                              <a href={payment.latest_payment_proof_url} target="_blank" rel="noreferrer">
-                                Lihat bukti
-                              </a>
-                            ) : (
-                              <span className="text-muted">-</span>
-                            )}
-                          </td>
-                          <td>
-                            {payment.payment_id ? (
-                              payment.latest_payment_status === "PENDING" ? (
-                                <div className="d-flex flex-wrap gap-2">
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-success"
-                                    onClick={() => handleUpdatePayment(payment, "APPROVED")}
-                                    disabled={updatingPaymentId === payment.payment_id}
-                                  >
-                                    {updatingPaymentId === payment.payment_id ? "Memproses..." : "Approve"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleUpdatePayment(payment, "REJECTED")}
-                                    disabled={updatingPaymentId === payment.payment_id}
-                                  >
-                                    {updatingPaymentId === payment.payment_id ? "Memproses..." : "Reject"}
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-muted">Tidak ada aksi</span>
-                              )
-                            ) : (
-                              <span className="text-muted">-</span>
-                            )}
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => openPaymentDetail(payment)}
+                            >
+                              Lihat Detail
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -410,6 +419,126 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      {selectedPayment && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Detail Cicilan</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={closePaymentDetail} />
+              </div>
+
+              <div className="modal-body">
+                <div className="mb-3">
+                  <div className="small text-muted">Anggota</div>
+                  <div className="fw-semibold">{selectedMember?.memberName || "Anggota"}</div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-6">
+                    <div className="small text-muted">Cicilan</div>
+                    <div className="fw-semibold">{selectedPayment.installment_label}</div>
+                  </div>
+                  <div className="col-6">
+                    <div className="small text-muted">Jatuh Tempo</div>
+                    <div className="fw-semibold">{formatDate(selectedPayment.due_date)}</div>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="small text-muted">Nominal</div>
+                  <div className="fw-semibold">{formatCurrency(selectedPayment.amount_due)}</div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="small text-muted">Status Cicilan</div>
+                  <span className={`admin-status-badge ${getStatusClass(selectedPayment.status)}`}>
+                    {normalizeStatus(selectedPayment.status)}
+                  </span>
+                </div>
+
+                {selectedPayment.payment_id ? (
+                  <>
+                    <div className="mb-3">
+                      <div className="small text-muted">Status Pembayaran</div>
+                      <span className={`admin-status-badge ${getPaymentStatusClass(selectedPayment.latest_payment_status)}`}>
+                        {getPaymentStatusLabel(selectedPayment.latest_payment_status)}
+                      </span>
+                    </div>
+
+                    {selectedPayment.latest_payment_date ? (
+                      <div className="mb-3">
+                        <div className="small text-muted">Tanggal Pembayaran</div>
+                        <div className="fw-semibold">{formatDate(selectedPayment.latest_payment_date)}</div>
+                      </div>
+                    ) : null}
+
+                    {selectedPayment.latest_payment_amount ? (
+                      <div className="mb-3">
+                        <div className="small text-muted">Nominal Pembayaran</div>
+                        <div className="fw-semibold">{formatCurrency(selectedPayment.latest_payment_amount)}</div>
+                      </div>
+                    ) : null}
+
+                    {selectedPayment.latest_payment_proof_url ? (
+                      <div className="mb-3">
+                        <div className="small text-muted">Bukti Pembayaran</div>
+                        <a href={selectedPayment.latest_payment_proof_url} target="_blank" rel="noreferrer">
+                          Lihat bukti
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="mb-3">
+                        <div className="small text-muted">Bukti Pembayaran</div>
+                        <span className="text-muted">-</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="mb-3">
+                    <div className="small text-muted">Pembayaran</div>
+                    <span className="text-muted">Belum ada pembayaran</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline-secondary" onClick={closePaymentDetail}>
+                  Tutup
+                </button>
+
+                {selectedPayment.payment_id && selectedPayment.latest_payment_status === "PENDING" ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-outline-success"
+                      onClick={() => {
+                        closePaymentDetail();
+                        void handleUpdatePayment(selectedPayment, "APPROVED");
+                      }}
+                      disabled={updatingPaymentId === selectedPayment.payment_id}
+                    >
+                      {updatingPaymentId === selectedPayment.payment_id ? "Memproses..." : "Approve"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger"
+                      onClick={() => {
+                        closePaymentDetail();
+                        void handleUpdatePayment(selectedPayment, "REJECTED");
+                      }}
+                      disabled={updatingPaymentId === selectedPayment.payment_id}
+                    >
+                      {updatingPaymentId === selectedPayment.payment_id ? "Memproses..." : "Reject"}
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {message && (
         <div className="alert alert-danger mt-3" role="alert">

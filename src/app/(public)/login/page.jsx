@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 import styles from "../AuthPage.module.css";
 
 export default function LoginPage() {
@@ -31,10 +32,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (!response.ok) {
-      setMessage(result.error || "Gagal login, coba lagi.");
+      toastWarning(result.error || "Gagal login, coba lagi.");
       return;
     }
 
+    toastSuccess("Login berhasil.");
     const nextPath = result.profile?.role === "admin" ? "/admin/dashboard" : "/dashboard";
     router.push(nextPath);
   }
