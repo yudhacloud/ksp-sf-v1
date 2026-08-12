@@ -74,6 +74,7 @@ export default function SavingsOverview() {
       obligationId: null,
       amount: 0,
       paymentDate: "",
+      proofFile: null,
       proofFileName: "",
       note: "",
    });
@@ -111,6 +112,7 @@ export default function SavingsOverview() {
                obligationId: firstUnpaid?.id ?? null,
                amount: firstUnpaid?.remainingAmount ?? 0,
                paymentDate: new Date().toISOString().slice(0, 10),
+               proofFile: null,
                proofFileName: "",
                note: "",
             }));
@@ -274,7 +276,15 @@ export default function SavingsOverview() {
                               id="proofUpload"
                               className="form-control admin-input"
                               type="file"
-                              onChange={(event) => setForm((current) => ({ ...current, proofFileName: event.target.files?.[0]?.name || "" }))}
+                              accept="image/*,.pdf"
+                              onChange={(event) => {
+                                 const file = event.target.files?.[0] || null;
+                                 setForm((current) => ({
+                                    ...current,
+                                    proofFile: file,
+                                    proofFileName: file?.name || "",
+                                 }));
+                              }}
                            />
                            {form.proofFileName ? <div className="small text-muted mt-2">File terpilih: {form.proofFileName}</div> : null}
                         </div>
@@ -284,6 +294,26 @@ export default function SavingsOverview() {
                            setFeedback(null);
 
                            try {
+                              let proofUrl = null;
+
+                              if (form.proofFile) {
+                                 const uploadFormData = new FormData();
+                                 uploadFormData.append("proof", form.proofFile);
+                                 uploadFormData.append("installmentId", String(form.obligationId));
+
+                                 const uploadResponse = await fetch("/api/uploads/installment-proof", {
+                                    method: "POST",
+                                    body: uploadFormData,
+                                 });
+
+                                 const uploadResult = await uploadResponse.json();
+                                 if (!uploadResponse.ok) {
+                                    throw new Error(uploadResult.error || "Gagal upload bukti pembayaran.");
+                                 }
+
+                                 proofUrl = uploadResult.proofUrl || null;
+                              }
+
                               const response = await fetch("/api/savings/transactions", {
                                  method: "POST",
                                  headers: { "Content-Type": "application/json" },
@@ -292,7 +322,7 @@ export default function SavingsOverview() {
                                     amount: form.amount,
                                     paymentDate: form.paymentDate,
                                     note: form.note,
-                                    proofUrl: form.proofFileName || null,
+                                    proofUrl,
                                  }),
                               });
 
@@ -308,6 +338,13 @@ export default function SavingsOverview() {
                               }
 
                               setFeedback({ type: "success", message: "Pembayaran tagihan berhasil dikirim dan menunggu verifikasi admin." });
+                              setForm((current) => ({
+                                 ...current,
+                                 proofFile: null,
+                                 proofFileName: "",
+                                 note: "",
+                              }));
+                              await loadOverview();
                            } catch (error) {
                               setFeedback({ type: "error", message: error.message || "Terjadi kesalahan saat mengirim pembayaran." });
                            } finally {

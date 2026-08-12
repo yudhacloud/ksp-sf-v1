@@ -408,9 +408,20 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
                               <a href={selectedDetail.value} target="_blank" rel="noreferrer" className="btn btn-primary">
                                  Buka Bukti di Tab Baru
                               </a>
-                              <div className="border rounded p-3 bg-light">
-                                 <p className="mb-2 text-muted">Pratinjau file tidak ditampilkan langsung. Gunakan tombol di atas untuk membuka bukti.</p>
-                                 <p className="mb-0 text-break">{selectedDetail.value}</p>
+                              <div className="border rounded-4 overflow-hidden bg-light">
+                                 {selectedDetail.value.toLowerCase().endsWith(".pdf") ? (
+                                    <iframe
+                                       src={selectedDetail.value}
+                                       title="Bukti pembayaran"
+                                       style={{ width: "100%", minHeight: 260, border: 0, background: "#fff" }}
+                                    />
+                                 ) : (
+                                    <img
+                                       src={selectedDetail.value}
+                                       alt="Bukti pembayaran"
+                                       style={{ width: "100%", maxHeight: 360, objectFit: "contain", display: "block", background: "#f8f9fa" }}
+                                    />
+                                 )}
                               </div>
                            </div>
                         )}

@@ -483,10 +483,22 @@ export default function Page() {
 
                     {selectedPayment.latest_payment_proof_url ? (
                       <div className="mb-3">
-                        <div className="small text-muted">Bukti Pembayaran</div>
-                        <a href={selectedPayment.latest_payment_proof_url} target="_blank" rel="noreferrer">
-                          Lihat bukti
-                        </a>
+                        <div className="small text-muted mb-2">Bukti Pembayaran</div>
+                        <div className="border rounded-4 overflow-hidden bg-light">
+                          {selectedPayment.latest_payment_proof_url.toLowerCase().endsWith(".pdf") ? (
+                            <iframe
+                              src={selectedPayment.latest_payment_proof_url}
+                              title="Bukti pembayaran"
+                              style={{ width: "100%", minHeight: 260, border: 0, background: "#fff" }}
+                            />
+                          ) : (
+                            <img
+                              src={selectedPayment.latest_payment_proof_url}
+                              alt="Bukti pembayaran"
+                              style={{ width: "100%", maxHeight: 360, objectFit: "contain", display: "block", background: "#f8f9fa" }}
+                            />
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="mb-3">
