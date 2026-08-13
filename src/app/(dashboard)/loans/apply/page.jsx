@@ -96,6 +96,11 @@ export default function LoanApplyPage() {
          <div className="admin-card">
             {loading ? (
                <div className="py-4 text-center text-muted">Memuat produk pinjaman...</div>
+            ) : products.length === 0 ? (
+               <div className="py-4 text-center">
+                  <div className="text-muted mb-2">Belum ada produk pinjaman aktif untuk saat ini.</div>
+
+               </div>
             ) : (
                <form onSubmit={handleSubmit}>
                   <div className="row gy-3">

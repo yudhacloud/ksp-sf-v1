@@ -113,6 +113,7 @@ export async function fetchSavingOverviewForMember({ accessToken, memberId }) {
          date: transaction.transaction_date || transaction.created_at,
          status: transaction.status,
          kind: transaction.saving_obligation_id ? "WAJIB" : "SUKARELA",
+         savingObligationId: transaction.saving_obligation_id || null,
       })),
       accounts: (accounts || []).map((account) => ({
          id: account.id,

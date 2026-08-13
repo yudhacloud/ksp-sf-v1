@@ -10,8 +10,7 @@ export default function AdminMemberCreatePage() {
    const [fullName, setFullName] = useState("");
    const [email, setEmail] = useState("");
    const [phone, setPhone] = useState("");
-   const [password, setPassword] = useState("");
-   const [role, setRole] = useState("member");
+   const [password] = useState("password123");
    const [loading, setLoading] = useState(false);
    const [message, setMessage] = useState("");
 
@@ -31,7 +30,6 @@ export default function AdminMemberCreatePage() {
                email,
                phone,
                password,
-               role,
             }),
          });
 
@@ -107,28 +105,12 @@ export default function AdminMemberCreatePage() {
                      </label>
                      <input
                         id="password"
-                        type="password"
+                        type="text"
                         className="form-control"
                         value={password}
-                        minLength={6}
-                        onChange={(event) => setPassword(event.target.value)}
-                        required
+                        readOnly
+                        aria-readonly="true"
                      />
-                  </div>
-
-                  <div className="col-12 col-md-6">
-                     <label className="form-label" htmlFor="role">
-                        Peran Anggota
-                     </label>
-                     <select
-                        id="role"
-                        className="form-select"
-                        value={role}
-                        onChange={(event) => setRole(event.target.value)}
-                     >
-                        <option value="member">Anggota</option>
-                        <option value="admin">Admin</option>
-                     </select>
                   </div>
                </div>
 

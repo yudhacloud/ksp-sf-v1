@@ -41,7 +41,7 @@ export default function ToastProvider() {
          style={{
             position: "fixed",
             left: "50%",
-            bottom: "1.25rem",
+            top: "1.25rem",
             transform: "translateX(-50%)",
             zIndex: 2000,
             display: "flex",

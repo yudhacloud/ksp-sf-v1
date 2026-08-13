@@ -23,9 +23,10 @@ export async function POST(request) {
   }
 
   const body = await request.json();
-  const { full_name, email, phone, password, role } = body;
+  const { full_name, email, phone, password } = body;
+  const safePassword = password || "password123";
 
-  if (!full_name || !email || !password) {
+  if (!full_name || !email || !safePassword) {
     return NextResponse.json(
       { error: "Nama, email, dan password wajib diisi." },
       { status: 400 }
@@ -37,8 +38,8 @@ export async function POST(request) {
       full_name,
       email,
       phone,
-      password,
-      role,
+      password: safePassword,
+      role: "member",
     });
 
     return NextResponse.json({ member });

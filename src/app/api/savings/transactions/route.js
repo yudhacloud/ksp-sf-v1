@@ -38,6 +38,10 @@ export async function POST(request) {
          return NextResponse.json({ error: "Data pembayaran tidak lengkap." }, { status: 400 });
       }
 
+      if (!proofUrl) {
+         return NextResponse.json({ error: "Bukti pembayaran wajib dilampirkan." }, { status: 400 });
+      }
+
       const transaction = await createSavingTransaction({
          accessToken,
          memberId: userId,

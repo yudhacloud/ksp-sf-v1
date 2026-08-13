@@ -49,7 +49,23 @@ function formatPaymentStatus(status) {
     return "Pembayaran disetujui";
   }
 
+  if (status === "REJECTED") {
+    return "Pembayaran ditolak";
+  }
+
   return "";
+}
+
+function getPaymentHistoryBadgeClass(status) {
+  if (status === "APPROVED") {
+    return "approved";
+  }
+
+  if (status === "REJECTED") {
+    return "rejected";
+  }
+
+  return "pending";
 }
 
 export default function Page() {
@@ -65,7 +81,14 @@ export default function Page() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const selectedLoan = loans.find((loan) => loan.id === selectedLoanId) || loans[0] || null;
-  const selectedInstallment = selectedLoan?.next_installment || null;
+  const nextUnpaidInstallment = useMemo(() => {
+    if (!selectedLoan?.loan_detail?.active_installments?.length) {
+      return null;
+    }
+
+    return selectedLoan.loan_detail.active_installments.find((installment) => installment.status === "PENDING") || null;
+  }, [selectedLoan]);
+  const selectedInstallment = nextUnpaidInstallment || selectedLoan?.next_installment || null;
 
   const loadLoans = useCallback(async () => {
     try {
@@ -327,50 +350,56 @@ export default function Page() {
             </div>
 
             {selectedLoan.status === "APPROVED" && selectedLoan.loan_detail?.active_installments?.length ? (
-              <div className="table-responsive">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Cicilan</th>
-                      <th>Jatuh Tempo</th>
-                      <th>Nominal</th>
-                      <th>Status</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedLoan.loan_detail.active_installments.map((installment) => (
-                      <tr key={installment.id}>
-                        <td>{`Cicilan ${installment.installment_number}`}</td>
-                        <td>{formatDate(installment.due_date)}</td>
-                        <td>{formatCurrency(installment.amount_due)}</td>
-                        <td>
-                          <span className={`admin-status-badge ${installment.status === "PAID" ? "approved" : installment.status === "PENDING" ? "pending" : ""}`}>
-                            {installment.status === "PAID" ? "Lunas" : installment.status === "PENDING" ? "Belum Lunas" : installment.status}
-                          </span>
-                        </td>
-                        <td>
-                          {installment.status === "PENDING" ? (
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary"
-                              disabled={installment.is_payment_locked || submittingInstallmentId === installment.id}
-                              onClick={() => handleOpenPaymentModal(selectedLoan, installment)}
-                            >
-                              {submittingInstallmentId === installment.id
-                                ? "Mengirim..."
-                                : installment.is_payment_locked
-                                  ? "Sudah Diajukan"
-                                  : "Bayar Cicilan"}
-                            </button>
-                          ) : (
-                            <span className="text-muted small">-</span>
-                          )}
-                        </td>
+              <div className="mb-4">
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Cicilan</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Nominal</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {selectedLoan.loan_detail.active_installments.map((installment) => {
+                        const isPayable = installment.id === nextUnpaidInstallment?.id && installment.status === "PENDING";
+
+                        return (
+                          <tr key={installment.id}>
+                            <td>{`Cicilan ${installment.installment_number}`}</td>
+                            <td>{formatDate(installment.due_date)}</td>
+                            <td>{formatCurrency(installment.amount_due)}</td>
+                            <td>
+                              <span className={`admin-status-badge ${installment.status === "PAID" ? "approved" : installment.status === "PENDING" ? "pending" : ""}`}>
+                                {installment.status === "PAID" ? "Lunas" : installment.status === "PENDING" ? "Belum Lunas" : installment.status}
+                              </span>
+                            </td>
+                            <td>
+                              {isPayable ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-primary"
+                                  disabled={installment.is_payment_locked || submittingInstallmentId === installment.id}
+                                  onClick={() => handleOpenPaymentModal(selectedLoan, installment)}
+                                >
+                                  {submittingInstallmentId === installment.id
+                                    ? "Mengirim..."
+                                    : installment.is_payment_locked
+                                      ? "Sudah Diajukan"
+                                      : "Bayar Cicilan"}
+                                </button>
+                              ) : (
+                                <span className="text-muted small">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : selectedLoan.status === "APPROVED" ? (
               <div className="text-muted py-3">Belum ada data cicilan untuk pinjaman ini.</div>
@@ -379,6 +408,54 @@ export default function Page() {
             ) : (
               <div className="text-muted py-3">Pinjaman masih menunggu persetujuan admin.</div>
             )}
+
+            {selectedLoan.status === "APPROVED" && selectedLoan.loan_detail?.payment_history?.length ? (
+              <div>
+                <h5 className="mb-3">Riwayat Pembayaran</h5>
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Cicilan</th>
+                        <th>Tanggal</th>
+                        <th>Nominal</th>
+                        <th>Status</th>
+                        <th>Bukti</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedLoan.loan_detail.payment_history.map((payment) => (
+                        <tr key={payment.id}>
+                          <td>{payment.installment_label || `Cicilan ${payment.installment_number || "-"}`}</td>
+                          <td>{formatDate(payment.payment_date || payment.created_at)}</td>
+                          <td>{formatCurrency(payment.amount)}</td>
+                          <td>
+                            <span className={`admin-status-badge ${getPaymentHistoryBadgeClass(payment.status)}`}>
+                              {payment.status === "APPROVED"
+                                ? "Disetujui"
+                                : payment.status === "REJECTED"
+                                  ? "Ditolak"
+                                  : "Menunggu verifikasi"}
+                            </span>
+                          </td>
+                          <td>
+                            {payment.proof_url ? (
+                              <a href={payment.proof_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary">
+                                Lihat Bukti
+                              </a>
+                            ) : (
+                              <span className="text-muted small">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : selectedLoan.status === "APPROVED" ? (
+              <div className="mt-4 text-muted py-3">Belum ada riwayat pembayaran untuk pinjaman ini.</div>
+            ) : null}
           </div>
         )}
 

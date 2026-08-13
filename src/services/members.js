@@ -29,7 +29,7 @@ export async function createMember(payload) {
     throw new Error("Supabase admin client tidak tersedia.");
   }
 
-  const normalizedRole = payload.role === "admin" ? "admin" : "member";
+  const normalizedRole = "member";
   const memberNumber = `M-${payload.email.split("@")[0]}-${Date.now().toString().slice(-5)}`;
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

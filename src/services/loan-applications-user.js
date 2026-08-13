@@ -1,12 +1,14 @@
 import { supabase } from "@/src/lib/supabase/client";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server-client";
 
-export async function fetchActiveLoanProductsForMembers() {
-   if (!supabase) {
+export async function fetchActiveLoanProductsForMembers(accessToken = null) {
+   const client = accessToken ? createSupabaseServerClient(accessToken) : supabase;
+
+   if (!client) {
       throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
-   const { data, error } = await supabase
+   const { data, error } = await client
       .from("loan_products")
       .select("id, name, max_amount, interest_rate, max_tenor")
       .eq("is_active", true)
@@ -101,7 +103,7 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
             if (installmentIds.length > 0) {
                const { data: fetchedPayments, error: paymentError } = await client
                   .from("installment_payments")
-                  .select("id, installment_id, amount, status, payment_date")
+                  .select("id, installment_id, amount, status, payment_date, proof_url, admin_note, created_at")
                   .in("installment_id", installmentIds)
                   .order("created_at", { ascending: false });
 
@@ -120,7 +122,10 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
             });
 
             const installmentList = (installments || []).map((installment) => {
-               const latestPayment = latestPaymentsByInstallment.get(installment.id) || null;
+               const installmentPaymentRows = paymentRows
+                  .filter((payment) => payment.installment_id === installment.id)
+                  .sort((a, b) => new Date(b.created_at || b.payment_date || 0) - new Date(a.created_at || a.payment_date || 0));
+               const latestPayment = installmentPaymentRows[0] || null;
                const paymentStatus = latestPayment?.status || null;
                const isPaymentLocked = paymentStatus === "PENDING" || paymentStatus === "APPROVED";
 
@@ -134,12 +139,30 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
                   is_payment_locked: isPaymentLocked,
                   latest_payment_amount: Number(latestPayment?.amount || 0),
                   payment_date: latestPayment?.payment_date || null,
+                  payment_history: installmentPaymentRows.map((payment) => ({
+                     id: payment.id,
+                     amount: Number(payment.amount || 0),
+                     status: payment.status || "PENDING",
+                     payment_date: payment.payment_date || null,
+                     proof_url: payment.proof_url || null,
+                     admin_note: payment.admin_note || null,
+                     created_at: payment.created_at || null,
+                  })),
                };
             });
 
             const amountPaid = installmentList
                .filter((installment) => installment.latest_payment_status === "APPROVED")
                .reduce((sum, installment) => sum + Number(installment.latest_payment_amount || 0), 0);
+
+            const paymentHistory = installmentList
+               .flatMap((installment) => (installment.payment_history || []).map((payment) => ({
+                  ...payment,
+                  installment_id: installment.id,
+                  installment_number: installment.installment_number,
+                  installment_label: `Cicilan ${installment.installment_number}`,
+               })))
+               .sort((a, b) => new Date(b.created_at || b.payment_date || 0) - new Date(a.created_at || a.payment_date || 0));
 
             const pendingInstallment = (installmentList || []).find((item) => item.status === "PENDING") || (installmentList || [])[0] || null;
 
@@ -166,6 +189,7 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
                status: loanData.status || "ACTIVE",
                active_installments: installmentList,
                total_paid: amountPaid,
+               payment_history: paymentHistory,
             };
          }
       }
@@ -181,8 +205,10 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
    return applications;
 }
 
-export async function createLoanApplication({ memberId, loanProductId, amount, tenor, purpose }) {
-   if (!supabase) {
+export async function createLoanApplication({ memberId, loanProductId, amount, tenor, purpose, accessToken = null }) {
+   const client = accessToken ? createSupabaseServerClient(accessToken) : supabase;
+
+   if (!client) {
       throw new Error("Supabase client pengguna tidak tersedia.");
    }
 
@@ -190,7 +216,7 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
       throw new Error("Member ID tidak tersedia.");
    }
 
-   const { data: product, error: productError } = await supabase
+   const { data: product, error: productError } = await client
       .from("loan_products")
       .select("id, name, max_amount, max_tenor, is_active")
       .eq("id", loanProductId)
@@ -226,7 +252,7 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
       throw new Error("Tenor pinjaman melebihi batas maksimal produk.");
    }
 
-   const { data, error } = await supabase
+   const { data, error } = await client
       .from("loan_applications")
       .insert([
          {

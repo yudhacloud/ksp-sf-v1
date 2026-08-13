@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toastError, toastSuccess, toastWarning } from "@/src/lib/toast";
 
 function getProductLabel(product) {
    if (!product) return "Simpanan";
@@ -144,7 +145,22 @@ export default function SavingsOverview() {
 
    const principalObligations = useMemo(() => overview.obligations.filter((item) => item.kind === "POKOK"), [overview.obligations]);
    const mandatoryObligations = useMemo(() => overview.obligations.filter((item) => item.kind === "WAJIB"), [overview.obligations]);
-   const payableObligations = useMemo(() => overview.obligations.filter((item) => Number(item.remainingAmount || 0) > 0), [overview.obligations]);
+   const pendingObligationIds = useMemo(
+      () => new Set(
+         (overview.transactions || [])
+            .filter((transaction) => transaction.status === "PENDING" && transaction.savingObligationId)
+            .map((transaction) => transaction.savingObligationId),
+      ),
+      [overview.transactions],
+   );
+   const payableObligations = useMemo(
+      () =>
+         overview.obligations.filter((item) => {
+            if (Number(item.remainingAmount || 0) <= 0) return false;
+            return !pendingObligationIds.has(item.id);
+         }),
+      [overview.obligations, pendingObligationIds],
+   );
 
    return (
       <div className="d-grid gap-4">
@@ -165,7 +181,8 @@ export default function SavingsOverview() {
 
             <div className="d-flex flex-wrap gap-2 mb-3">
                <button className={`btn ${activeTab === "billing" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("billing")}>Tagihan Pokok & Wajib</button>
-               <button className={`btn ${activeTab === "transactions" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("transactions")}>Riwayat Simpanan Sukarela</button>
+               <button className={`btn ${activeTab === "voluntary" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("voluntary")}>Simpanan Sukarela</button>
+               <button className={`btn ${activeTab === "history" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setActiveTab("history")}>Riwayat Pembayaran</button>
             </div>
 
             {feedback ? (
@@ -277,6 +294,7 @@ export default function SavingsOverview() {
                               className="form-control admin-input"
                               type="file"
                               accept="image/*,.pdf"
+                              required
                               onChange={(event) => {
                                  const file = event.target.files?.[0] || null;
                                  setForm((current) => ({
@@ -292,6 +310,12 @@ export default function SavingsOverview() {
                         <button className="btn btn-primary" type="button" disabled={isSubmitting} onClick={async () => {
                            setIsSubmitting(true);
                            setFeedback(null);
+
+                           if (!form.proofFile) {
+                              toastWarning("Bukti pembayaran wajib dilampirkan.");
+                              setIsSubmitting(false);
+                              return;
+                           }
 
                            try {
                               let proofUrl = null;
@@ -337,7 +361,7 @@ export default function SavingsOverview() {
                                  throw new Error(result.error || "Gagal mengirim pembayaran.");
                               }
 
-                              setFeedback({ type: "success", message: "Pembayaran tagihan berhasil dikirim dan menunggu verifikasi admin." });
+                              toastSuccess("Pembayaran tagihan berhasil dikirim dan menunggu verifikasi admin.");
                               setForm((current) => ({
                                  ...current,
                                  proofFile: null,
@@ -346,7 +370,7 @@ export default function SavingsOverview() {
                               }));
                               await loadOverview();
                            } catch (error) {
-                              setFeedback({ type: "error", message: error.message || "Terjadi kesalahan saat mengirim pembayaran." });
+                              toastError(error.message || "Terjadi kesalahan saat mengirim pembayaran.");
                            } finally {
                               setIsSubmitting(false);
                            }
@@ -404,7 +428,7 @@ export default function SavingsOverview() {
                </div>
             )}
 
-            {activeTab === "transactions" && (
+            {activeTab === "voluntary" && (
                <div className="row g-4">
                   <div className="col-12">
                      <div className="admin-card" style={{ padding: "1rem" }}>
@@ -413,7 +437,7 @@ export default function SavingsOverview() {
                         <div className="d-grid gap-2">
                            {isLoading ? (
                               <div className="text-muted">Memuat riwayat simpanan sukarela...</div>
-                           ) : overview.transactions.length === 0 ? (
+                           ) : overview.transactions.filter((item) => item.kind === "SUKARELA" || item.kind !== "WAJIB").length === 0 ? (
                               <div className="text-muted">Belum ada setoran sukarela.</div>
                            ) : overview.transactions.filter((item) => item.kind === "SUKARELA" || item.kind !== "WAJIB").map((item) => (
                               <div key={item.id} className="border rounded p-3">
@@ -430,6 +454,38 @@ export default function SavingsOverview() {
                                     </div>
                                  </div>
                                  <div className="small text-muted mt-2">Jenis: {getTransactionKindLabel(item.kind)}</div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            )}
+
+            {activeTab === "history" && (
+               <div className="row g-4">
+                  <div className="col-12">
+                     <div className="admin-card" style={{ padding: "1rem" }}>
+                        <h3 className="mb-3">Riwayat Pembayaran</h3>
+                        <div className="d-grid gap-2">
+                           {isLoading ? (
+                              <div className="text-muted">Memuat riwayat pembayaran...</div>
+                           ) : (overview.transactions || []).filter((item) => item.savingObligationId).length === 0 ? (
+                              <div className="text-muted">Belum ada riwayat pembayaran tagihan simpanan.</div>
+                           ) : (overview.transactions || []).filter((item) => item.savingObligationId).map((item) => (
+                              <div key={item.id} className="border rounded p-3">
+                                 <div className="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                       <div className="fw-semibold">Pembayaran Tagihan Simpanan</div>
+                                       <div className="small text-muted">{formatDate(item.date)}</div>
+                                    </div>
+                                    <div className="text-end">
+                                       <div className="fw-semibold">{formatCurrency(item.amount)}</div>
+                                       <span className={`admin-status-badge ${item.status === "APPROVED" ? "approved" : item.status === "REJECTED" ? "rejected" : "pending"}`}>
+                                          {getStatusLabel(item.status)}
+                                       </span>
+                                    </div>
+                                 </div>
                               </div>
                            ))}
                         </div>
