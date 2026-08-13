@@ -295,13 +295,17 @@ export default function Page() {
                   </div>
 
                   <div className="row g-2 mb-3">
-                    <div className="col-6">
+                    <div className="col-4">
                       <div className="small text-muted">Nominal</div>
                       <div className="fw-semibold">{formatCurrency(loan.amount)}</div>
                     </div>
-                    <div className="col-6">
+                    <div className="col-4">
                       <div className="small text-muted">Tenor</div>
                       <div className="fw-semibold">{loan.tenor} bulan</div>
+                    </div>
+                    <div className="col-4">
+                      <div className="small text-muted">Bunga</div>
+                      <div className="fw-semibold">{Number(loan.loan_product_interest_rate || 0).toFixed(2)}%</div>
                     </div>
                   </div>
 
@@ -331,17 +335,21 @@ export default function Page() {
             </div>
 
             <div className="row g-3 mb-4">
-              <div className="col-12 col-md-4">
+              <div className="col-12 col-md-3">
                 <div className="small text-muted">Jumlah Pinjaman</div>
                 <div className="fw-bold fs-5">{formatCurrency(selectedLoan.amount)}</div>
               </div>
-              <div className="col-12 col-md-4">
+              <div className="col-12 col-md-3">
+                <div className="small text-muted">Suku Bunga</div>
+                <div className="fw-bold fs-5">{Number(selectedLoan.loan_product_interest_rate || 0).toFixed(2)}%</div>
+              </div>
+              <div className="col-12 col-md-3">
                 <div className="small text-muted">Jumlah Sudah Dibayar</div>
                 <div className="fw-bold fs-5 text-success">
                   {formatCurrency(selectedLoan.loan_detail?.total_paid || 0)}
                 </div>
               </div>
-              <div className="col-12 col-md-4">
+              <div className="col-12 col-md-3">
                 <div className="small text-muted">Sisa Pinjaman</div>
                 <div className="fw-bold fs-5">
                   {formatCurrency(Math.max(Number(selectedLoan.amount || 0) - Number(selectedLoan.loan_detail?.total_paid || 0), 0))}

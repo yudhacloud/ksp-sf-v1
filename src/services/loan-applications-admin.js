@@ -134,8 +134,9 @@ export async function updateLoanApplicationStatusById(applicationId, status, adm
          const principalAmount = Number(data.amount || 0);
          const tenorMonths = Number(data.tenor || 0);
          const interestRate = Number(productRelation?.interest_rate || 0);
+         const totalWithInterest = principalAmount * (1 + (interestRate / 100));
          const monthlyInstallment = tenorMonths > 0
-            ? Number((principalAmount / tenorMonths).toFixed(2))
+            ? Number((totalWithInterest / tenorMonths).toFixed(2))
             : principalAmount;
 
          const startDate = new Date();
@@ -150,7 +151,7 @@ export async function updateLoanApplicationStatusById(applicationId, status, adm
                interest_rate: interestRate,
                tenor: tenorMonths,
                monthly_installment: monthlyInstallment,
-               remaining_balance: principalAmount,
+               remaining_balance: totalWithInterest,
                start_date: formatDateValue(startDate),
                end_date: formatDateValue(endDate),
                status: "ACTIVE",

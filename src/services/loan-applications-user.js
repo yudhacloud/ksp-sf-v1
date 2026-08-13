@@ -65,7 +65,8 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
          loan_product_id,
          loan_products!loan_applications_loan_product_id_fkey (
             id,
-            name
+            name,
+            interest_rate
          )
       `)
       .eq("member_id", memberId)
@@ -197,6 +198,7 @@ export async function fetchMemberLoanApplications(memberId, accessToken = null) 
       return {
          ...application,
          loan_product_name: productRelation?.name || application.loan_product_name || "Pinjaman",
+         loan_product_interest_rate: Number(productRelation?.interest_rate ?? application.loan_product_interest_rate ?? 0),
          loan_detail: loanDetail,
          next_installment: nextInstallment,
       };

@@ -115,7 +115,7 @@ export default function LoanApplyPage() {
                         >
                            {products.map((product) => (
                               <option key={product.id} value={product.id}>
-                                 {product.name} — {formatCurrency(product.max_amount)} • {product.max_tenor} bulan
+                                 {product.name} — {formatCurrency(product.max_amount)} • {product.max_tenor} bulan • {Number(product.interest_rate || 0).toFixed(2)}%
                               </option>
                            ))}
                         </select>
