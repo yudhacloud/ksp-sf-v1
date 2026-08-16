@@ -104,6 +104,7 @@ create table public.saving_products (
 	id uuid primary key default gen_random_uuid(),
 	name varchar(100) not null unique,
 	saving_type public.saving_type not null,
+	default_amount numeric(14,2) not null default 0 check (default_amount > 0),
 	description text,
 	is_active boolean not null default true,
 	created_at timestamptz not null default now(),
@@ -689,11 +690,11 @@ from auth.users
 where email = 'admin@kspsf.com'
 on conflict (id) do nothing;
 
-insert into public.saving_products (name, saving_type, description)
+insert into public.saving_products (name, saving_type, default_amount, description)
 values
-('Simpanan Pokok', 'POKOK', 'Setoran satu kali saat menjadi anggota'),
-('Simpanan Wajib', 'WAJIB', 'Setoran rutin setiap bulan'),
-('Simpanan Sukarela', 'SUKARELA', 'Setoran bebas')
+('Simpanan Pokok', 'POKOK', 100000, 'Setoran satu kali saat menjadi anggota'),
+('Simpanan Wajib', 'WAJIB', 100000, 'Setoran rutin setiap bulan'),
+('Simpanan Sukarela', 'SUKARELA', 50000, 'Setoran bebas')
 on conflict (name) do nothing;
 
 insert into public.loan_products (name, max_amount, interest_rate, max_tenor)

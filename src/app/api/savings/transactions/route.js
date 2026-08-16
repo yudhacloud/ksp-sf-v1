@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { AUTH_COOKIE, COOKIE_OPTIONS } from "@/src/lib/auth/cookies";
 import { createSavingTransaction } from "@/src/services/saving-transactions-user";
+import { createAuditLog } from "@/src/services/audit-logs";
+import { createAdminReviewNotifications } from "@/src/services/notifications";
 
 function isAuthError(error) {
    const message = String(error?.message || "").toLowerCase();
@@ -50,6 +52,24 @@ export async function POST(request) {
          paymentDate,
          note,
          proofUrl,
+      });
+
+      await createAuditLog({
+         actorId: userId,
+         actorRole: "member",
+         action: "saving_transaction_submitted",
+         entityType: "saving_transaction",
+         entityId: transaction?.id || null,
+         description: "Transaksi simpanan dikirim oleh anggota.",
+         details: { obligation_id: obligationId, amount, proof_url: proofUrl || null },
+      });
+
+      await createAdminReviewNotifications({
+         title: "Transaksi simpanan menunggu verifikasi",
+         message: "Ada transaksi simpanan baru yang menunggu persetujuan admin.",
+         type: "info",
+         relatedEntity: "saving_transaction",
+         relatedId: transaction?.id || null,
       });
 
       return NextResponse.json({ transaction });

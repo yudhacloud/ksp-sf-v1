@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
 import { createLoanApplication, fetchActiveLoanProductsForMembers } from "@/src/services/loan-applications-user";
+import { createAdminReviewNotifications } from "@/src/services/notifications";
 
 export async function GET(request) {
    const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS_TOKEN)?.value;
@@ -33,6 +34,15 @@ export async function POST(request) {
       };
 
       const application = await createLoanApplication(payload);
+
+      await createAdminReviewNotifications({
+         title: "Pengajuan pinjaman baru",
+         message: "Ada pengajuan pinjaman baru yang menunggu persetujuan admin.",
+         type: "info",
+         relatedEntity: "loan_application",
+         relatedId: application?.id || null,
+      });
+
       return NextResponse.json({ application });
    } catch (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });

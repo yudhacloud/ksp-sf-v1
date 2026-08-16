@@ -7,7 +7,7 @@ export async function fetchActiveSavingProducts() {
 
    const { data, error } = await supabaseAdmin
       .from("saving_products")
-      .select("id, name, saving_type, description, is_active, created_at")
+      .select("id, name, saving_type, default_amount, description, is_active, created_at")
       .eq("is_active", true)
       .order("name", { ascending: true });
 
@@ -25,7 +25,7 @@ export async function fetchSavingProducts() {
 
    const { data, error } = await supabaseAdmin
       .from("saving_products")
-      .select("id, name, saving_type, description, is_active")
+      .select("id, name, saving_type, default_amount, description, is_active")
       .order("created_at", { ascending: false })
 
    if (error) {
@@ -46,11 +46,12 @@ export async function createSavingProduct(payload) {
          {
             name: payload.name,
             saving_type: payload.saving_type,
+            default_amount: Number(payload.default_amount || 0),
             description: payload.description,
             is_active: payload.is_active,
          },
       ])
-      .select("id, name, saving_type, description, is_active")
+      .select("id, name, saving_type, default_amount, description, is_active")
       .single()
 
    if (error) {
@@ -67,7 +68,7 @@ export async function fetchSavingProductById(productId) {
 
    const { data, error } = await supabaseAdmin
       .from("saving_products")
-      .select("id, name, saving_type, description, is_active, created_at")
+      .select("id, name, saving_type, default_amount, description, is_active, created_at")
       .eq("id", productId)
       .single()
 
@@ -88,11 +89,12 @@ export async function updateSavingProductById(productId, payload) {
       .update({
          name: payload.name,
          saving_type: payload.saving_type,
+         default_amount: Number(payload.default_amount || 0),
          description: payload.description,
          is_active: payload.is_active,
       })
       .eq("id", productId)
-      .select("id, name, saving_type, description, is_active")
+      .select("id, name, saving_type, default_amount, description, is_active")
       .single()
 
    if (error) {

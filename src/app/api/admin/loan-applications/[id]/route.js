@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 import { AUTH_COOKIE } from "@/src/lib/auth/cookies";
 import { updateLoanApplicationStatusById } from "@/src/services/loan-applications-admin";
+import { createAuditLog } from "@/src/services/audit-logs";
+import { createNotification } from "@/src/services/notifications";
 
 function isUuid(value) {
    return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -39,6 +41,34 @@ export async function PATCH(request, { params }) {
 
    try {
       const application = await updateLoanApplicationStatusById(applicationId, status, adminNote || null, reviewedBy);
+
+      const actorId = reviewedBy || null;
+      await createAuditLog({
+         actorId,
+         actorRole: "admin",
+         action: status === "APPROVED" ? "loan_application_approved" : "loan_application_rejected",
+         entityType: "loan_application",
+         entityId: applicationId,
+         description: status === "APPROVED"
+            ? `Pengajuan pinjaman disetujui oleh admin.`
+            : `Pengajuan pinjaman ditolak oleh admin.`,
+         details: { status, admin_note: adminNote || null },
+      });
+
+      if (application?.member_id) {
+         await createNotification({
+            recipientId: application.member_id,
+            recipientRole: "member",
+            title: status === "APPROVED" ? "Pengajuan pinjaman disetujui" : "Pengajuan pinjaman ditolak",
+            message: status === "APPROVED"
+               ? "Pengajuan pinjaman Anda telah disetujui dan siap masuk ke tahap pembayaran cicilan."
+               : `Pengajuan pinjaman Anda ditolak. ${adminNote ? `Alasan: ${adminNote}` : ""}`.trim(),
+            type: status === "APPROVED" ? "success" : "warning",
+            relatedEntity: "loan_application",
+            relatedId: applicationId,
+         });
+      }
+
       return NextResponse.json({ application });
    } catch (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -7,12 +7,12 @@ export async function GET(request) {
    if (authGuardError) {
       return authGuardError
    }
-   
+
    try {
       const saving_products = await fetchSavingProducts();
-      return NextResponse.json({saving_products})
+      return NextResponse.json({ saving_products })
    } catch (error) {
-      return NextResponse.json({error: error.message}, {status: 500})
+      return NextResponse.json({ error: error.message }, { status: 500 })
    }
 }
 
@@ -23,18 +23,26 @@ export async function POST(request) {
    }
 
    const body = await request.json()
-   const { name, saving_type, is_active, description } = body
+   const { name, saving_type, is_active, description, default_amount } = body
    const normalizedName = typeof name === "string" ? name.trim() : ""
    const normalizedType = typeof saving_type === "string" ? saving_type.trim().toUpperCase() : ""
    const normalizedDescription = typeof description === "string" ? description.trim() : null
    const normalizedStatus = typeof is_active === "boolean" ? is_active : true
+   const normalizedDefaultAmount = Number(default_amount || 0)
    const allowedTypes = ["POKOK", "WAJIB", "SUKARELA"]
 
    if (!normalizedName || !normalizedType) {
       return NextResponse.json(
-      { error: "Nama produk dan tipe simpanan wajib diisi." },
-      { status: 400 }
-    );
+         { error: "Nama produk dan tipe simpanan wajib diisi." },
+         { status: 400 }
+      );
+   }
+
+   if (!Number.isFinite(normalizedDefaultAmount) || normalizedDefaultAmount <= 0) {
+      return NextResponse.json(
+         { error: "Nominal simpanan wajib lebih dari 0." },
+         { status: 400 }
+      );
    }
 
    if (!allowedTypes.includes(normalizedType)) {
@@ -48,6 +56,7 @@ export async function POST(request) {
       const saving_product = await createSavingProduct({
          name: normalizedName,
          saving_type: normalizedType,
+         default_amount: normalizedDefaultAmount,
          description: normalizedDescription,
          is_active: normalizedStatus,
       })
@@ -55,8 +64,8 @@ export async function POST(request) {
       return NextResponse.json({ saving_product })
    } catch (error) {
       return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+         { error: error.message },
+         { status: 500 }
+      );
    }
 }

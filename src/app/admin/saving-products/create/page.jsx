@@ -9,6 +9,7 @@ export default function AdminSavingProductCreatePage() {
    const router = useRouter()
    const [name, setName] = useState("")
    const [savingType, setSavingType] = useState("POKOK")
+   const [defaultAmount, setDefaultAmount] = useState(100000)
    const [description, setDescription] = useState("")
    const [isActive, setIsActive] = useState(true)
    const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ export default function AdminSavingProductCreatePage() {
             body: JSON.stringify({
                name: name,
                saving_type: savingType,
+               default_amount: Number(defaultAmount || 0),
                is_active: isActive,
                description: description
             })
@@ -85,6 +87,20 @@ export default function AdminSavingProductCreatePage() {
                         <option value="WAJIB">Wajib</option>
                         <option value="SUKARELA">Sukarela</option>
                      </select>
+                  </div>
+                  <div className="col-12 col-md-6">
+                     <label className="form-label" htmlFor="defaultAmount">
+                        Nominal Default
+                     </label>
+                     <input
+                        id="defaultAmount"
+                        type="number"
+                        min="1"
+                        className="form-control"
+                        value={defaultAmount}
+                        onChange={(event) => setDefaultAmount(Number(event.target.value) || 0)}
+                        required
+                     />
                   </div>
                   <div className="col-12 col-md-6">
                      <label className="form-label" htmlFor="isActive">

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 import { fetchSavingTransactionById, updateSavingTransactionStatusById } from "@/src/services/saving-transactions";
+import { createAuditLog } from "@/src/services/audit-logs";
+import { createNotification } from "@/src/services/notifications";
 
 const ALLOWED_STATUSES = ["APPROVED", "REJECTED"];
 
@@ -66,6 +68,34 @@ export async function PATCH(request, { params }) {
          payload.status,
          payload.admin_note || null
       );
+
+      const actorId = request.cookies.get("user_id")?.value || null;
+      await createAuditLog({
+         actorId,
+         actorRole: "admin",
+         action: payload.status === "APPROVED" ? "saving_transaction_approved" : "saving_transaction_rejected",
+         entityType: "saving_transaction",
+         entityId: resolvedParams.id,
+         description: payload.status === "APPROVED"
+            ? "Transaksi simpanan disetujui oleh admin."
+            : "Transaksi simpanan ditolak oleh admin.",
+         details: { status: payload.status, admin_note: payload.admin_note || null },
+      });
+
+      if (saving_transaction?.member_id) {
+         await createNotification({
+            recipientId: saving_transaction.member_id,
+            recipientRole: "member",
+            title: payload.status === "APPROVED" ? "Transaksi simpanan disetujui" : "Transaksi simpanan ditolak",
+            message: payload.status === "APPROVED"
+               ? "Transaksi simpanan Anda telah disetujui."
+               : `Transaksi simpanan Anda ditolak. ${payload.admin_note ? `Alasan: ${payload.admin_note}` : ""}`.trim(),
+            type: payload.status === "APPROVED" ? "success" : "warning",
+            relatedEntity: "saving_transaction",
+            relatedId: resolvedParams.id,
+         });
+      }
+
       return NextResponse.json({ saving_transaction });
    } catch (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

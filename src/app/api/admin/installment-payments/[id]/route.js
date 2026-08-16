@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 import { updateInstallmentPaymentStatusById } from "@/src/services/loan-admin";
+import { createAuditLog } from "@/src/services/audit-logs";
+import { createNotification } from "@/src/services/notifications";
 
 const ALLOWED_STATUSES = ["APPROVED", "REJECTED"];
 
@@ -39,6 +41,34 @@ export async function PATCH(request, { params }) {
 
    try {
       const payment = await updateInstallmentPaymentStatusById(resolvedParams.id, payload.status, payload.admin_note || null);
+
+      const adminUserId = request.cookies.get("user_id")?.value || null;
+      await createAuditLog({
+         actorId: adminUserId,
+         actorRole: "admin",
+         action: payload.status === "APPROVED" ? "installment_payment_approved" : "installment_payment_rejected",
+         entityType: "installment_payment",
+         entityId: resolvedParams.id,
+         description: payload.status === "APPROVED"
+            ? "Pembayaran cicilan disetujui oleh admin."
+            : "Pembayaran cicilan ditolak oleh admin.",
+         details: { status: payload.status, admin_note: payload.admin_note || null },
+      });
+
+      if (payment?.member_id) {
+         await createNotification({
+            recipientId: payment.member_id,
+            recipientRole: "member",
+            title: payload.status === "APPROVED" ? "Pembayaran cicilan disetujui" : "Pembayaran cicilan ditolak",
+            message: payload.status === "APPROVED"
+               ? "Pembayaran cicilan Anda telah diterima dan diverifikasi."
+               : `Pembayaran cicilan Anda ditolak. ${payload.admin_note ? `Alasan: ${payload.admin_note}` : ""}`.trim(),
+            type: payload.status === "APPROVED" ? "success" : "warning",
+            relatedEntity: "installment_payment",
+            relatedId: resolvedParams.id,
+         });
+      }
+
       return NextResponse.json({ payment });
    } catch (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,18 +1,5 @@
 import { supabaseAdmin } from "../lib/supabase/client";
 
-function getDefaultAmountForSavingType(savingType) {
-   switch (savingType) {
-      case "POKOK":
-         return 100000;
-      case "WAJIB":
-         return 100000;
-      case "SUKARELA":
-         return 50000;
-      default:
-         return 100000;
-   }
-}
-
 function formatDateInput(date) {
    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -80,7 +67,7 @@ export async function enrollMemberInSavingProducts({ memberId, productIds }) {
 
       const { data: productData, error: productError } = await supabaseAdmin
          .from("saving_products")
-         .select("id, name, saving_type")
+         .select("id, name, saving_type, default_amount")
          .eq("id", productId)
          .eq("is_active", true)
          .single();
@@ -110,6 +97,7 @@ export async function enrollMemberInSavingProducts({ memberId, productIds }) {
          const obligationPeriodDate = getBillingPeriodForSavingType(productData.saving_type, monthStart);
          const obligationPeriodValue = formatDateInput(obligationPeriodDate);
          const obligationDueDateValue = formatDateInput(getDueDateForBillingPeriod(obligationPeriodDate));
+         const obligationAmount = Number(productData.default_amount || 0);
 
          const { error: obligationError } = await supabaseAdmin
             .from("saving_obligations")
@@ -118,7 +106,7 @@ export async function enrollMemberInSavingProducts({ memberId, productIds }) {
                   saving_account_id: createdAccount.id,
                   billing_period: obligationPeriodValue,
                   due_date: obligationDueDateValue,
-                  amount_due: getDefaultAmountForSavingType(productData.saving_type),
+                  amount_due: obligationAmount,
                   status: "PENDING",
                },
             ]);
@@ -150,7 +138,7 @@ export async function enrollMemberInDefaultSavingProducts({ memberId }) {
 
    const { data: defaultProducts, error: productsError } = await supabaseAdmin
       .from("saving_products")
-      .select("id, saving_type")
+      .select("id, saving_type, default_amount")
       .in("saving_type", ["POKOK", "WAJIB"])
       .eq("is_active", true);
 
@@ -188,7 +176,8 @@ export async function ensureMemberObligationsForCurrentMonth({ memberId }) {
          start_date,
          saving_product:saving_products!saving_accounts_saving_product_id_fkey (
             id,
-            saving_type
+            saving_type,
+            default_amount
          )
       `)
       .eq("member_id", memberId)
@@ -224,12 +213,13 @@ export async function ensureMemberObligationsForCurrentMonth({ memberId }) {
          }
 
          if (!existingObligation) {
+            const productAmount = Number(account.saving_product?.default_amount || 0);
             const { error: insertError } = await supabaseAdmin.from("saving_obligations").insert([
                {
                   saving_account_id: account.id,
                   billing_period: obligationPeriodValue,
                   due_date: obligationDueDateValue,
-                  amount_due: getDefaultAmountForSavingType(productType),
+                  amount_due: productAmount,
                   status: "PENDING",
                },
             ]);
@@ -259,12 +249,13 @@ export async function ensureMemberObligationsForCurrentMonth({ memberId }) {
          }
 
          if (!existingObligation) {
+            const productAmount = Number(account.saving_product?.default_amount || 0);
             const { error: insertError } = await supabaseAdmin.from("saving_obligations").insert([
                {
                   saving_account_id: account.id,
                   billing_period: obligationPeriodValue,
                   due_date: obligationDueDateValue,
-                  amount_due: getDefaultAmountForSavingType(productType),
+                  amount_due: productAmount,
                   status: "PENDING",
                },
             ]);

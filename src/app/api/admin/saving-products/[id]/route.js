@@ -16,6 +16,7 @@ function normalizePayload(body) {
   return {
     name: typeof body?.name === "string" ? body.name.trim() : "",
     saving_type: typeof body?.saving_type === "string" ? body.saving_type.trim().toUpperCase() : "",
+    default_amount: Number(body?.default_amount || 0),
     description: typeof body?.description === "string" ? body.description.trim() : null,
     is_active: typeof body?.is_active === "boolean" ? body.is_active : true,
   };
@@ -57,6 +58,13 @@ export async function PATCH(request, { params }) {
   if (!payload.name || !payload.saving_type) {
     return NextResponse.json(
       { error: "Nama produk dan tipe simpanan wajib diisi." },
+      { status: 400 }
+    );
+  }
+
+  if (!Number.isFinite(payload.default_amount) || payload.default_amount <= 0) {
+    return NextResponse.json(
+      { error: "Nominal simpanan wajib lebih dari 0." },
       { status: 400 }
     );
   }

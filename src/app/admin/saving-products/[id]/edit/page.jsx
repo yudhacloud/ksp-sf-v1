@@ -12,6 +12,7 @@ export default function AdminSavingProductEditPage() {
 
    const [name, setName] = useState("");
    const [savingType, setSavingType] = useState("POKOK");
+   const [defaultAmount, setDefaultAmount] = useState(100000);
    const [description, setDescription] = useState("");
    const [isActive, setIsActive] = useState(true);
    const [loading, setLoading] = useState(true);
@@ -44,6 +45,7 @@ export default function AdminSavingProductEditPage() {
             const product = result.saving_product;
             setName(product.name || "");
             setSavingType(product.saving_type || "POKOK");
+            setDefaultAmount(Number(product.default_amount || 0));
             setDescription(product.description || "");
             setIsActive(Boolean(product.is_active));
          } catch (error) {
@@ -78,6 +80,7 @@ export default function AdminSavingProductEditPage() {
             body: JSON.stringify({
                name,
                saving_type: savingType,
+               default_amount: Number(defaultAmount || 0),
                description,
                is_active: isActive,
             }),
@@ -139,6 +142,21 @@ export default function AdminSavingProductEditPage() {
                            <option value="WAJIB">Wajib</option>
                            <option value="SUKARELA">Sukarela</option>
                         </select>
+                     </div>
+
+                     <div className="col-12 col-md-6">
+                        <label className="form-label" htmlFor="defaultAmount">
+                           Nominal Default
+                        </label>
+                        <input
+                           id="defaultAmount"
+                           type="number"
+                           min="1"
+                           className="form-control"
+                           value={defaultAmount}
+                           onChange={(event) => setDefaultAmount(Number(event.target.value) || 0)}
+                           required
+                        />
                      </div>
 
                      <div className="col-12 col-md-6">

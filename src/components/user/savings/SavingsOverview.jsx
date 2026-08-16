@@ -161,6 +161,7 @@ export default function SavingsOverview() {
          }),
       [overview.obligations, pendingObligationIds],
    );
+   const canSubmitPayment = !isSubmitting && payableObligations.length > 0 && !!form.obligationId && Number(form.amount || 0) > 0;
 
    return (
       <div className="d-grid gap-4">
@@ -307,9 +308,21 @@ export default function SavingsOverview() {
                            {form.proofFileName ? <div className="small text-muted mt-2">File terpilih: {form.proofFileName}</div> : null}
                         </div>
 
-                        <button className="btn btn-primary" type="button" disabled={isSubmitting} onClick={async () => {
+                        <button className="btn btn-primary" type="button" disabled={!canSubmitPayment} onClick={async () => {
                            setIsSubmitting(true);
                            setFeedback(null);
+
+                           if (!form.obligationId || payableObligations.length === 0) {
+                              toastWarning("Tidak ada tagihan yang bisa dibayar saat ini.");
+                              setIsSubmitting(false);
+                              return;
+                           }
+
+                           if (Number(form.amount || 0) <= 0) {
+                              toastWarning("Nominal pembayaran harus lebih dari 0.");
+                              setIsSubmitting(false);
+                              return;
+                           }
 
                            if (!form.proofFile) {
                               toastWarning("Bukti pembayaran wajib dilampirkan.");

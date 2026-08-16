@@ -73,11 +73,11 @@ BEGIN
 
     -- Pertahankan master data produk pinjaman dan simpanan
     -- Pastikan produk default tetap tersedia jika belum ada
-    INSERT INTO public.saving_products (name, saving_type, description, is_active)
+    INSERT INTO public.saving_products (name, saving_type, default_amount, description, is_active)
     VALUES
-        ('Simpanan Pokok', 'POKOK', 'Simpanan pokok yang wajib dibayar sekali saat anggota aktif', true),
-        ('Simpanan Wajib', 'WAJIB', 'Simpanan wajib bulanan yang harus dibayar secara rutin', true),
-        ('Simpanan Sukarela', 'SUKARELA', 'Simpanan sukarela yang dibayar secara opsional', true)
+        ('Simpanan Pokok', 'POKOK', 100000, 'Simpanan pokok yang wajib dibayar sekali saat anggota aktif', true),
+        ('Simpanan Wajib', 'WAJIB', 100000, 'Simpanan wajib bulanan yang harus dibayar secara rutin', true),
+        ('Simpanan Sukarela', 'SUKARELA', 50000, 'Simpanan sukarela yang dibayar secara opsional', true)
     ON CONFLICT DO NOTHING;
 
     INSERT INTO public.loan_products (name, max_amount, interest_rate, max_tenor, is_active)

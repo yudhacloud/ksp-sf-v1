@@ -33,6 +33,7 @@ export default function Sidebar({ role = "member" }) {
       { href: "/admin/loan-applications", label: "Pengajuan Pinjaman" },
       { href: "/admin/loans", label: "Pinjaman Aktif" },
       { href: "/admin/installment-payments", label: "Pembayaran Cicilan" },
+      { href: "/admin/audit-logs", label: "Audit Log" },
       { href: "/admin/reports", label: "Laporan" },
       { href: "/admin/settings", label: "Pengaturan" },
    ];
