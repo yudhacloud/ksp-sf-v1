@@ -32,7 +32,7 @@ export default async function Page() {
          <PageHeader
             title="Monitoring Simpanan"
             subtitle="Pantau status simpanan per anggota dan riwayat pembayaran bulanan secara lebih mudah dibaca."
-            actions={<button className="btn btn-primary">Unduh Laporan</button>}
+
          />
 
          <SavingMonitoringTable monitoringData={monitoringData} />

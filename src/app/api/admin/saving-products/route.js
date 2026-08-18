@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSavingProduct, fetchSavingProducts } from "@/src/services/saving-products";
+import { validateSavingProductCreatePayload } from "@/src/services/saving-product-rules";
 import { assertAdminRequest } from "@/src/lib/auth/server";
 
 export async function GET(request) {
@@ -29,7 +30,6 @@ export async function POST(request) {
    const normalizedDescription = typeof description === "string" ? description.trim() : null
    const normalizedStatus = typeof is_active === "boolean" ? is_active : true
    const normalizedDefaultAmount = Number(default_amount || 0)
-   const allowedTypes = ["POKOK", "WAJIB", "SUKARELA"]
 
    if (!normalizedName || !normalizedType) {
       return NextResponse.json(
@@ -38,25 +38,20 @@ export async function POST(request) {
       );
    }
 
-   if (!Number.isFinite(normalizedDefaultAmount) || normalizedDefaultAmount <= 0) {
-      return NextResponse.json(
-         { error: "Nominal simpanan wajib lebih dari 0." },
-         { status: 400 }
-      );
-   }
+   const validation = validateSavingProductCreatePayload({
+      savingType: normalizedType,
+      defaultAmount: normalizedDefaultAmount,
+   });
 
-   if (!allowedTypes.includes(normalizedType)) {
-      return NextResponse.json(
-         { error: "Tipe simpanan tidak valid." },
-         { status: 400 }
-      );
+   if (!validation.valid) {
+      return NextResponse.json({ error: validation.message }, { status: 400 });
    }
 
    try {
       const saving_product = await createSavingProduct({
          name: normalizedName,
-         saving_type: normalizedType,
-         default_amount: normalizedDefaultAmount,
+         saving_type: validation.normalizedType,
+         default_amount: validation.normalizedAmount,
          description: normalizedDescription,
          is_active: normalizedStatus,
       })

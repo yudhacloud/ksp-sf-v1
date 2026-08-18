@@ -1,5 +1,6 @@
 import { supabase } from "@/src/lib/supabase/client";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server-client";
+import { getLoanEligibilityFromMemberState } from "@/src/services/loan-eligibility";
 
 export async function fetchActiveLoanProductsForMembers(accessToken = null) {
    const client = accessToken ? createSupabaseServerClient(accessToken) : supabase;
@@ -216,6 +217,34 @@ export async function createLoanApplication({ memberId, loanProductId, amount, t
 
    if (!memberId) {
       throw new Error("Member ID tidak tersedia.");
+   }
+
+   const { data: memberApplications, error: applicationsError } = await client
+      .from("loan_applications")
+      .select("id, status")
+      .eq("member_id", memberId);
+
+   if (applicationsError) {
+      throw new Error(applicationsError.message);
+   }
+
+   const { data: activeLoans, error: loansError } = await client
+      .from("loans")
+      .select("id, status, remaining_balance")
+      .eq("member_id", memberId)
+      .eq("status", "ACTIVE");
+
+   if (loansError) {
+      throw new Error(loansError.message);
+   }
+
+   const eligibility = getLoanEligibilityFromMemberState({
+      pendingLoanApplications: memberApplications || [],
+      activeLoans: activeLoans || [],
+   });
+
+   if (!eligibility.allowed) {
+      throw new Error(eligibility.message);
    }
 
    const { data: product, error: productError } = await client

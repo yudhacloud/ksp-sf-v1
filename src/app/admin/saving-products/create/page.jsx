@@ -21,6 +21,12 @@ export default function AdminSavingProductCreatePage() {
       setMessage("")
 
       try {
+         if (savingType !== "SUKARELA") {
+            toastWarning("Admin hanya dapat menambah simpanan sukarela.");
+            setLoading(false);
+            return;
+         }
+
          const response = await fetch("/api/admin/saving-products", {
             method: "POST",
             headers: {
@@ -83,8 +89,6 @@ export default function AdminSavingProductCreatePage() {
                         value={savingType}
                         onChange={(event) => setSavingType(event.target.value)}
                      >
-                        <option value="POKOK">Pokok</option>
-                        <option value="WAJIB">Wajib</option>
                         <option value="SUKARELA">Sukarela</option>
                      </select>
                   </div>

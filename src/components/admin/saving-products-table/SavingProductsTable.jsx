@@ -48,6 +48,11 @@ export default function SavingProductsTable({ savingProducts }) {
    }, [savingProducts, search, statusFilter, joinedFilter])
 
    async function handleToggleStatus(product) {
+      if (product.saving_type === "POKOK" || product.saving_type === "WAJIB") {
+         toastError("Produk simpanan pokok dan wajib tidak dapat dinonaktifkan.");
+         return;
+      }
+
       const nextStatus = !product.is_active;
       const promptText = nextStatus ? "mengaktifkan" : "menonaktifkan";
       const confirmed = window.confirm(`Yakin ${promptText} produk ${product.name}?`);

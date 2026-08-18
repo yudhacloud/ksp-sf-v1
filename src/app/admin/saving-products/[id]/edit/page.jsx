@@ -72,6 +72,10 @@ export default function AdminSavingProductEditPage() {
       setMessage("");
 
       try {
+         if (savingType === "POKOK" || savingType === "WAJIB") {
+            setIsActive(true);
+         }
+
          const response = await fetch(`/api/admin/saving-products/${productId}`, {
             method: "PATCH",
             headers: {
@@ -82,7 +86,7 @@ export default function AdminSavingProductEditPage() {
                saving_type: savingType,
                default_amount: Number(defaultAmount || 0),
                description,
-               is_active: isActive,
+               is_active: savingType === "POKOK" || savingType === "WAJIB" ? true : isActive,
             }),
          });
 
@@ -136,12 +140,22 @@ export default function AdminSavingProductEditPage() {
                            id="savingType"
                            className="form-select"
                            value={savingType}
-                           onChange={(event) => setSavingType(event.target.value)}
+                           disabled={savingType === "POKOK" || savingType === "WAJIB"}
+                           onChange={(event) => {
+                              const nextType = event.target.value;
+                              setSavingType(nextType);
+                              if (nextType === "POKOK" || nextType === "WAJIB") {
+                                 setIsActive(true);
+                              }
+                           }}
                         >
                            <option value="POKOK">Pokok</option>
                            <option value="WAJIB">Wajib</option>
                            <option value="SUKARELA">Sukarela</option>
                         </select>
+                        {(savingType === "POKOK" || savingType === "WAJIB") && (
+                           <small className="text-muted d-block mt-2">Tipe simpanan ini bersifat tetap dan tidak dapat diubah.</small>
+                        )}
                      </div>
 
                      <div className="col-12 col-md-6">
@@ -159,20 +173,22 @@ export default function AdminSavingProductEditPage() {
                         />
                      </div>
 
-                     <div className="col-12 col-md-6">
-                        <label className="form-label" htmlFor="isActive">
-                           Status
-                        </label>
-                        <select
-                           id="isActive"
-                           className="form-select"
-                           value={isActive ? "true" : "false"}
-                           onChange={(event) => setIsActive(event.target.value === "true")}
-                        >
-                           <option value="true">Aktif</option>
-                           <option value="false">Nonaktif</option>
-                        </select>
-                     </div>
+                     {savingType !== "POKOK" && savingType !== "WAJIB" && (
+                        <div className="col-12 col-md-6">
+                           <label className="form-label" htmlFor="isActive">
+                              Status
+                           </label>
+                           <select
+                              id="isActive"
+                              className="form-select"
+                              value={isActive ? "true" : "false"}
+                              onChange={(event) => setIsActive(event.target.value === "true")}
+                           >
+                              <option value="true">Aktif</option>
+                              <option value="false">Nonaktif</option>
+                           </select>
+                        </div>
+                     )}
 
                      <div className="col-12 col-md-6">
                         <label className="form-label" htmlFor="description">

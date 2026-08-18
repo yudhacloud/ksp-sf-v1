@@ -125,6 +125,18 @@ export default function Page() {
 
   const activeLoans = useMemo(() => loans.filter((loan) => loan.status === "APPROVED").length, [loans]);
   const pendingApplications = useMemo(() => loans.filter((loan) => loan.status === "PENDING").length, [loans]);
+  const hasPendingLoanApplication = useMemo(() => loans.some((loan) => loan.status === "PENDING"), [loans]);
+  const hasActiveUnpaidLoan = useMemo(
+    () => loans.some((loan) => {
+      if (loan.status !== "APPROVED") {
+        return false;
+      }
+
+      return Number(loan?.loan_detail?.remaining_balance ?? 0) > 0;
+    }),
+    [loans],
+  );
+  const isLoanApplicationBlocked = hasPendingLoanApplication || hasActiveUnpaidLoan;
   const totalAmount = useMemo(
     () => loans
       .filter((loan) => loan.status === "APPROVED")
@@ -233,9 +245,25 @@ export default function Page() {
         title="Pinjaman Saya"
         subtitle="Lihat riwayat pengajuan pinjaman dan status pinjaman yang sedang berjalan."
         actions={
-          <a href="/loans/apply" className="btn btn-primary">
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={isLoanApplicationBlocked}
+            title={
+              hasPendingLoanApplication
+                ? "Masih ada pengajuan pinjaman yang menunggu persetujuan."
+                : hasActiveUnpaidLoan
+                  ? "Masih ada pinjaman aktif yang belum lunas total."
+                  : "Ajukan pinjaman"
+            }
+            onClick={() => {
+              if (!isLoanApplicationBlocked) {
+                window.location.href = "/loans/apply";
+              }
+            }}
+          >
             Ajukan Pinjaman
-          </a>
+          </button>
         }
       />
 

@@ -145,7 +145,25 @@ export default function Page() {
           </div>
           <div className="dashboard-hero-actions">
             <a className="btn btn-outline-primary" href="/profile">Lihat Profil</a>
-            <a className="btn btn-primary" href="/loans/apply">Ajukan Pinjaman</a>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={dashboard.pendingApplications > 0 || dashboard.pendingObligations > 0}
+              title={
+                dashboard.pendingApplications > 0
+                  ? "Masih ada pengajuan pinjaman yang menunggu persetujuan."
+                  : dashboard.pendingObligations > 0
+                    ? "Masih ada tagihan yang belum lunas."
+                    : "Ajukan pinjaman"
+              }
+              onClick={() => {
+                if (!(dashboard.pendingApplications > 0 || dashboard.pendingObligations > 0)) {
+                  window.location.href = "/loans/apply";
+                }
+              }}
+            >
+              Ajukan Pinjaman
+            </button>
           </div>
         </div>
 
