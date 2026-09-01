@@ -1,33 +1,37 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PageHeader from "@/src/components/ui/PageHeader";
 import MembersTable from "@/src/components/admin/member-table/MembersTable";
-import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
-async function getMembers() {
-  // Fetch data dari API server-side pada saat render halaman.
-  // Gunakan URL absolut agar `fetch` server-side tidak gagal dengan path relatif.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const authHeaders = await getInternalAuthFetchHeaders();
-  const response = await fetch(`${baseUrl}/api/admin/members`, {
-    cache: "no-store",
-    headers: authHeaders,
-  });
+export default function Page() {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    throw new Error("Respons API member bukan JSON. Kemungkinan request ter-redirect ke halaman login.");
-  }
+  useEffect(() => {
+    async function loadMembers() {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/admin/members");
 
-  const result = await response.json();
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || "Gagal mengambil data anggota.");
+        }
 
-  if (!response.ok) {
-    throw new Error(result.error || "Gagal mengambil data anggota.");
-  }
+        const result = await response.json();
+        setMembers(result.members || []);
+      } catch (err) {
+        setError(err?.message || "Terjadi kesalahan saat memuat data.");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  return result.members || [];
-}
+    loadMembers();
+  }, []);
 
-export default async function Page() {
-  const members = await getMembers();
   const totalMembers = members.length;
   const activeMembers = members.filter((member) => member.status).length;
   const inactiveMembers = members.filter((member) => !member.status).length;
@@ -47,22 +51,32 @@ export default async function Page() {
       <div className="admin-grid mb-4">
         <article className="admin-card">
           <p className="admin-stat-title">Total Anggota</p>
-          <div className="admin-stat-value">{totalMembers}</div>
+          <div className="admin-stat-value">{loading ? "-" : totalMembers}</div>
           <p>Anggota terdaftar dalam sistem.</p>
         </article>
         <article className="admin-card">
           <p className="admin-stat-title">Anggota Aktif</p>
-          <div className="admin-stat-value">{activeMembers}</div>
+          <div className="admin-stat-value">{loading ? "-" : activeMembers}</div>
           <p>Anggota dengan status aktif.</p>
         </article>
         <article className="admin-card">
           <p className="admin-stat-title">Anggota Nonaktif</p>
-          <div className="admin-stat-value">{inactiveMembers}</div>
+          <div className="admin-stat-value">{loading ? "-" : inactiveMembers}</div>
           <p>Anggota yang menunggu reaktivasi.</p>
         </article>
       </div>
 
-      <MembersTable members={members} />
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-muted py-3">Memuat data anggota...</div>
+      ) : (
+        <MembersTable members={members} />
+      )}
     </section>
   );
 }

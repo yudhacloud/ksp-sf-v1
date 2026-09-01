@@ -1,41 +1,55 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import SavingMonitoringTable from "@/src/components/admin/saving-monitoring-table/SavingMonitoringTable";
 import PageHeader from "@/src/components/ui/PageHeader";
-import { getInternalAuthFetchHeaders } from "@/src/lib/auth/server";
 
-async function getSavingMonitoring() {
-   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-   const authHeaders = await getInternalAuthFetchHeaders();
-   const response = await fetch(`${baseUrl}/api/admin/saving-monitoring`, {
-      cache: "no-store",
-      headers: authHeaders,
-   });
+export default function Page() {
+   const [monitoringData, setMonitoringData] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState("");
 
-   const contentType = response.headers.get("content-type") || "";
-   if (!contentType.includes("application/json")) {
-      throw new Error("Respons API monitoring simpanan bukan JSON.");
-   }
+   useEffect(() => {
+      async function loadSavingMonitoring() {
+         try {
+            setLoading(true);
+            const response = await fetch("/api/admin/saving-monitoring");
 
-   const result = await response.json();
+            if (!response.ok) {
+               const result = await response.json();
+               throw new Error(result.error || "Gagal mengambil data monitoring simpanan.");
+            }
 
-   if (!response.ok) {
-      throw new Error(result.error || "Gagal mengambil data monitoring simpanan");
-   }
+            const result = await response.json();
+            setMonitoringData(result.saving_monitoring || []);
+         } catch (err) {
+            setError(err?.message || "Terjadi kesalahan saat memuat data.");
+         } finally {
+            setLoading(false);
+         }
+      }
 
-   return result.saving_monitoring || [];
-}
-
-export default async function Page() {
-   const monitoringData = await getSavingMonitoring();
+      loadSavingMonitoring();
+   }, []);
 
    return (
       <section className="container py-3 admin-page">
          <PageHeader
             title="Monitoring Simpanan"
             subtitle="Pantau status simpanan per anggota dan riwayat pembayaran bulanan secara lebih mudah dibaca."
-
          />
 
-         <SavingMonitoringTable monitoringData={monitoringData} />
+         {error && (
+            <div className="alert alert-danger" role="alert">
+               {error}
+            </div>
+         )}
+
+         {loading ? (
+            <div className="text-muted py-3">Memuat data monitoring simpanan...</div>
+         ) : (
+            <SavingMonitoringTable monitoringData={monitoringData} />
+         )}
       </section>
    );
 }
