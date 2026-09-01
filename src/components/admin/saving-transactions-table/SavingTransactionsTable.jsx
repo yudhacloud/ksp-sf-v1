@@ -53,7 +53,7 @@ function XIcon() {
    );
 }
 
-export default function SavingTransactionsTable({ savingTransactions = [] }) {
+export default function SavingTransactionsTable({ savingTransactions = [], onTransactionUpdated = null }) {
    const router = useRouter();
 
    const [search, setSearch] = useState("");
@@ -141,7 +141,9 @@ export default function SavingTransactionsTable({ savingTransactions = [] }) {
          }
 
          toastWarning(`Transaksi ${transaction.member?.full_name || transaction.member_id} berhasil diperbarui.`);
-         router.refresh();
+         if (onTransactionUpdated) {
+            onTransactionUpdated();
+         }
       } catch (error) {
          toastError(error?.message || "Gagal menghubungi server.");
       } finally {

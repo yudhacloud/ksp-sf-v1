@@ -395,7 +395,7 @@ export default function Page() {
                                 {getPaymentStatusLabel(payment.latest_payment_status)}
                               </span>
                             ) : (
-                              <span className="admin-status-badge pending">Belum ada pembayaran</span>
+                              <span className="admin-status-badge secondary">Belum ada pembayaran</span>
                             )}
                           </td>
                           <td>

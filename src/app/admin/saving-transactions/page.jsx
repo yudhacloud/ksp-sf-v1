@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SavingTransactionsTable from "@/src/components/admin/saving-transactions-table/SavingTransactionsTable";
 import PageHeader from "@/src/components/ui/PageHeader";
 
@@ -9,28 +9,29 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadSavingTransactions() {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/admin/saving-transactions");
+  const loadSavingTransactions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch("/api/admin/saving-transactions");
 
-        if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || "Gagal mengambil data transaksi simpanan.");
-        }
-
+      if (!response.ok) {
         const result = await response.json();
-        setSavingTransactions(result.saving_transactions || []);
-      } catch (err) {
-        setError(err?.message || "Terjadi kesalahan saat memuat data.");
-      } finally {
-        setLoading(false);
+        throw new Error(result.error || "Gagal mengambil data transaksi simpanan.");
       }
-    }
 
-    loadSavingTransactions();
+      const result = await response.json();
+      setSavingTransactions(result.saving_transactions || []);
+    } catch (err) {
+      setError(err?.message || "Terjadi kesalahan saat memuat data.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadSavingTransactions();
+  }, [loadSavingTransactions]);
 
   const totalTransactions = savingTransactions.length;
   const approvedTransactions = savingTransactions.filter((t) => t.status === "APPROVED").length;
@@ -70,7 +71,7 @@ export default function Page() {
       {loading ? (
         <div className="text-muted py-3">Memuat data transaksi simpanan...</div>
       ) : (
-        <SavingTransactionsTable savingTransactions={savingTransactions} />
+        <SavingTransactionsTable savingTransactions={savingTransactions} onTransactionUpdated={loadSavingTransactions} />
       )}
     </section>
   );

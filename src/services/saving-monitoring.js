@@ -24,7 +24,7 @@ function normalizeMonitoringStatus(status) {
 
 export async function fetchSavingMonitoring() {
    if (!supabaseAdmin) {
-      throw new Error("Supabase admin client tidak tersedia.")
+      throw new Error("Supabase admin client tidak dikonfigurasi. Pastikan SUPABASE_SECRET_KEY sudah diatur di environment variables.")
    }
 
    const { data, error } = await supabaseAdmin

@@ -309,6 +309,11 @@ select {
   color: var(--color-danger);
 }
 
+.admin-status-badge.secondary {
+  background: rgba(107, 114, 128, 0.14);
+  color: #4b5563;
+}
+
 .admin-status-badge.info {
   background: rgba(59, 130, 246, 0.14);
   color: var(--color-info);

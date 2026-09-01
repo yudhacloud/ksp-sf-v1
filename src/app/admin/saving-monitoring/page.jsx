@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SavingMonitoringTable from "@/src/components/admin/saving-monitoring-table/SavingMonitoringTable";
 import PageHeader from "@/src/components/ui/PageHeader";
 
@@ -9,28 +9,31 @@ export default function Page() {
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState("");
 
-   useEffect(() => {
-      async function loadSavingMonitoring() {
-         try {
-            setLoading(true);
-            const response = await fetch("/api/admin/saving-monitoring");
+   const loadSavingMonitoring = useCallback(async () => {
+      try {
+         setLoading(true);
+         setError("");
+         const response = await fetch("/api/admin/saving-monitoring");
 
-            if (!response.ok) {
-               const result = await response.json();
-               throw new Error(result.error || "Gagal mengambil data monitoring simpanan.");
-            }
-
+         if (!response.ok) {
             const result = await response.json();
-            setMonitoringData(result.saving_monitoring || []);
-         } catch (err) {
-            setError(err?.message || "Terjadi kesalahan saat memuat data.");
-         } finally {
-            setLoading(false);
+            throw new Error(result.error || "Gagal mengambil data monitoring simpanan.");
          }
-      }
 
-      loadSavingMonitoring();
+         const result = await response.json();
+         setMonitoringData(result.saving_monitoring || []);
+      } catch (err) {
+         console.error("Error fetching saving monitoring:", err);
+         setError(err?.message || "Terjadi kesalahan saat memuat data monitoring simpanan.");
+         setMonitoringData([]);
+      } finally {
+         setLoading(false);
+      }
    }, []);
+
+   useEffect(() => {
+      loadSavingMonitoring();
+   }, [loadSavingMonitoring]);
 
    return (
       <section className="container py-3 admin-page">
